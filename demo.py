@@ -6,11 +6,12 @@ from dwave.system.samplers import DWaveSampler
 from job_shop_scheduler import get_jss_bqm
 
 # Construct a BQM for the jobs
-jobs = {"cupcakes": [("mixer", 2), ("oven", 1)],
-        "smoothie": [("mixer", 1)],
-        "lasagna": [("oven", 2)]}
-max_time = 4	  # Upperbound on how long the schedule can be; 4 is arbitrary
-bqm = get_jss_bqm(jobs, max_time)
+jobs = {"cupcakes": [("CPU1", 2), ("CPU1", 1)],
+        "smoothie": [("CPU1", 1)],
+        "lasagna": [("CPU1", 2)]}
+max_time = 6	  # Upperbound on how long the schedule can be; 4 is arbitrary
+num_of_machines = 2
+bqm = get_jss_bqm(jobs, num_of_machines, max_time)
 
 # Submit BQM
 # Note: may need to tweak the chain strength and the number of reads

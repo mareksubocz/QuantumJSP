@@ -5,59 +5,12 @@ from bisect import bisect_right
 import dwavebinarycsp
 
 
-def get_jss_bqm(job_dict, num_of_machines, max_time=None, stitch_kwargs=None):
-    """Returns a BQM to the Job Shop Scheduling problem.
-
-    Args:
-        job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
-        max_time: An integer. The upper bound on the amount of time the schedule can take.
-        stitch_kwargs: A dict. Kwargs to be passed through get_jss_bqm to dwavebinarycsp.stitch.
-
-    Returns:
-        A dimod.BinaryQuadraticModel. Note: The nodes in the BQM are labelled in the format,
-          <job_name>_<task_number>,<time>. (See Example below)
-
-    Example:
-        'jobs' dict describes the jobs we're interested in scheduling. Namely, the dict key is the
-         name of the job and the dict value is the ordered list of tasks that the job must do.
-
-        It follows the format:
-          {"job_name": [(machine_name, time_duration_on_machine), ..],
-           "another_job_name": [(some_machine, time_duration_on_machine), ..]}
-
-        >>> # Create BQM
-        >>> jobs = {"a": [("mixer", 2), ("oven", 1)],
-                   "b": [("mixer", 1)],
-                   "c": [("oven", 2)]}
-        >>> max_time = 4	  # Put an upperbound on how long the schedule can be
-        >>> bqm = get_jss_bqm(jobs, max_time, stitch_kwargs)
-
-        >>> # May need to tweak the chain strength and the number of reads
-        >>> sampler = EmbeddingComposite(DWaveSampler(solver={'qpu':True}))
-        >>> sampleset = sampler.sample(bqm, chain_strength=2, num_reads=1000)
-
-        >>> # Results
-        >>> # Note: Each node follows the format <job_name>_<task_number>,<time>.
-        >>> print(sampleset)
-        c_0,0  b_0,1  c_0,1  b_0,3  c_0,2  b_0,0  b_0,2  a_1,2  a_1,3  a_1,1  a_0,0  a_1,0  a_0,1  a_0,2
-            1      0      0      0      0      0      1      1      0      0      1      0      0      0
-
-        Interpreting Results:
-          Consider the node, "b_0,2" with a value of 1.
-          - "b_0,2" is interpreted as job b, task 0, at time 2
-          - Job b's 0th task is ("mixer", 1)
-          - Hence, at time 2, Job b's 0th task is turned on
-
-          Consider the node, "a_1,0" with a value of 0.
-          - "a_1,0" is interpreted as job a, task 1, at time 0
-          - Job a's 1st task is ("oven", 1)
-          - Hence, at time 0, Job a's 1st task is not run
-    """
+def get_my_jss_bqm(job_dict, num_of_machines, max_time=None, stitch_kwargs=None):
     if stitch_kwargs == None:
         stitch_kwargs = {}
 
     scheduler = JobShopScheduler(job_dict, max_time)
-    return scheduler.get_bqm(num_of_machines, stitch_kwargs)
+    return scheduler.get_bqm(stitch_kwargs)
 
 
 def sum_to_one(*args):
@@ -65,21 +18,17 @@ def sum_to_one(*args):
 
 
 def get_label(task, time):
-    """Creates a standardized name for variables in the constraint satisfaction problem,
-    JobShopScheduler.csp.
-    """
     return "{task.job}_{task.position},{time}".format(**locals())
 
 
 class Task:
-    def __init__(self, job, position, machine, duration):
+    def __init__(self, job, position, duration):
         self.job = job
         self.position = position
-        self.machine = machine
         self.duration = duration
 
     def __repr__(self):
-        return ("{{job: {job}, position: {position}, machine: {machine}, duration:"
+        return ("{{job: {job}, position: {position}, duration:"
                 " {duration}}}").format(**vars(self))
 
 
@@ -142,8 +91,8 @@ class JobShopScheduler:
         for job_name, job_tasks in jobs.items():
             last_task_indices.append(last_task_indices[-1] + len(job_tasks))
 
-            for i, (machine, time_span) in enumerate(job_tasks):
-                tasks.append(Task(job_name, i, machine, time_span))
+            for i, time_span in enumerate(job_tasks):
+                tasks.append(Task(job_name, i, time_span))
                 total_time += time_span
 
         # Update values
@@ -177,7 +126,7 @@ class JobShopScheduler:
                     next_label = get_label(next_task, tt)
                     self.csp.add_constraint(valid_edges, {current_label, next_label})
 
-    def _add_share_machine_constraint(self, num_of_machines):
+    def _add_share_machine_constraint(self):
         """self.csp gets the constraint: At most one task per machine per time
         """
         sorted_tasks = sorted(self.tasks, key=lambda x: x.machine)
@@ -195,7 +144,7 @@ class JobShopScheduler:
             head = tail
 
             # No need to build coupling for a single task
-            if len(same_machine_tasks) < num_of_machines:
+            if len(same_machine_tasks) < 2:
                 continue
 
             # Apply constraint between all tasks for each unit of time
@@ -245,7 +194,7 @@ class JobShopScheduler:
                 label = get_label(task, (self.max_time - 1) - t) # -1 for zero-indexed time
                 self.csp.fix_variable(label, 0)
 
-    def get_bqm(self, num_of_machines, stitch_kwargs=None):
+    def get_bqm(self, stitch_kwargs=None):
         """Returns a BQM to the Job Shop Scheduling problem.
 
         Args:
@@ -257,7 +206,7 @@ class JobShopScheduler:
         # Apply constraints to self.csp
         self._add_one_start_constraint()
         self._add_precedence_constraint()
-        self._add_share_machine_constraint(num_of_machines)
+        self._add_share_machine_constraint()
         self._remove_absurd_times()
 
         # Get BQM
