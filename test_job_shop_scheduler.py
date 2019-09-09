@@ -28,7 +28,7 @@ def fill_with_zeros(expected_solution_dict, job_dict, max_time):
 
 def get_energy(solution_dict, bqm):
     min_energy = float('inf')
-    aux_variables = [v for v in bqm.variables if match("aux\d+$", v)]
+    aux_variables = [v for v in bqm.variables if match(r"aux\d+$", v)]
 
     # Try all possible values of auxiliary variables
     for aux_values in product([0, 1], repeat=len(aux_variables)):
@@ -178,14 +178,15 @@ class TestJSSExactSolverResponse(unittest.TestCase):
 
         # Check that common variables match
         for key in common_keys:
-            if match('aux\d+$', key):
+            if match(r'aux\d+$', key):
                 continue
 
-            self.assertEqual(response[key], expected[key], "Failed on key {}".format(key))
+            self.assertEqual(response[key], expected[key],
+                             "Failed on key {}".format(key))
 
         # Check that non-existent 'sample' variables are 0
         for key in different_keys:
-            if match('aux\d+$', key):
+            if match(r'aux\d+$', key):
                 continue
 
             self.assertEqual(response[key], 0, "Failed on key {}".format(key))
@@ -233,7 +234,6 @@ class TestJSSExactSolverResponse(unittest.TestCase):
         # Compare variable values
         self.compare(response_sample, expected)
 
-
     def test_simple_schedule_more_machines(self):
         jobs = {"j0": [(0, 1)],
                 "j1": [(1, 1)],
@@ -264,8 +264,9 @@ class TestJSSExactSolverResponse(unittest.TestCase):
         self.assertEqual(expected_energy, sample_energy)
         self.compare(response_sample, expected)
 
+
 class TestJSSHeuristicResponse(unittest.TestCase):
-    #TODO: make a general compare function
+    # TODO: make a general compare function
     def compare(self, response, expected):
         """Comparing response to expected results
         """
@@ -277,14 +278,15 @@ class TestJSSHeuristicResponse(unittest.TestCase):
 
         # Check that common variables match
         for key in common_keys:
-            if match('aux\d+$', key):
+            if match(r'aux\d+$', key):
                 continue
 
-            self.assertEqual(response[key], expected[key], "Failed on key {}".format(key))
+            self.assertEqual(response[key], expected[key],
+                             "Failed on key {}".format(key))
 
         # Check that non-existent 'sample' variables are 0
         for key in different_keys:
-            if match('aux\d+$', key):
+            if match(r'aux\d+$', key):
                 continue
 
             self.assertEqual(response[key], 0, "Failed on key {}".format(key))
@@ -386,7 +388,8 @@ class TestGetJssBqm(unittest.TestCase):
 
         # ImpossibleBQM should be raised, as the max_graph size is too small
         bad_stitch_kwargs = {"max_graph_size": 0}
-        self.assertRaises(ImpossibleBQM, get_jss_bqm, jobs, max_time, bad_stitch_kwargs)
+        self.assertRaises(ImpossibleBQM, get_jss_bqm, jobs,
+                          max_time, bad_stitch_kwargs)
 
 
 class TestGetBqm(unittest.TestCase):

@@ -1,17 +1,3 @@
-# Copyright 2019 D-Wave Systems Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from __future__ import print_function
 
 from bisect import bisect_right
@@ -19,7 +5,7 @@ from bisect import bisect_right
 import dwavebinarycsp
 
 
-def get_jss_bqm(job_dict, max_time=None, stitch_kwargs=None):
+def get_jss_bqm(job_dict, max_time=None, stitch_kwargs={}):
     """Returns a BQM to the Job Shop Scheduling problem.
     Args:
         job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
@@ -58,8 +44,6 @@ def get_jss_bqm(job_dict, max_time=None, stitch_kwargs=None):
           - Job a's 1st task is ("oven", 1)
           - Hence, at time 0, Job a's 1st task is not run
     """
-    if stitch_kwargs == None:
-        stitch_kwargs = {}
 
     scheduler = JobShopScheduler(job_dict, max_time)
     return scheduler.get_bqm(stitch_kwargs)
@@ -73,7 +57,7 @@ def get_label(task, time):
     """Creates a standardized name for variables in the constraint satisfaction problem,
     JobShopScheduler.csp.
     """
-    return "{task.job}_{task.position},{time}".format(**locals())
+    return f"{task.job}_{task.position},{time}"
 
 
 class Task:
@@ -128,7 +112,8 @@ class JobShopScheduler:
         self.tasks = []
         self.last_task_indices = []
         self.max_time = max_time
-        self.csp = dwavebinarycsp.ConstraintSatisfactionProblem(dwavebinarycsp.BINARY)
+        self.csp = dwavebinarycsp.ConstraintSatisfactionProblem(
+            dwavebinarycsp.BINARY)
 
         # Populates self.tasks and self.max_time
         self._process_data(job_dict)
@@ -177,13 +162,15 @@ class JobShopScheduler:
 
                 for tt in range(min(t + current_task.duration, self.max_time)):
                     next_label = get_label(next_task, tt)
-                    self.csp.add_constraint(valid_edges, {current_label, next_label})
+                    self.csp.add_constraint(
+                        valid_edges, {current_label, next_label})
 
     def _add_share_machine_constraint(self):
         """self.csp gets the constraint: At most one task per machine per time
         """
         sorted_tasks = sorted(self.tasks, key=lambda x: x.machine)
-        wrapped_tasks = KeyList(sorted_tasks, lambda x: x.machine) # Key wrapper for bisect function
+        # Key wrapper for bisect function
+        wrapped_tasks = KeyList(sorted_tasks, lambda x: x.machine)
 
         head = 0
         valid_values = {(0, 0), (1, 0), (0, 1)}
@@ -234,7 +221,8 @@ class JobShopScheduler:
         # Times that are too late for task
         # Note: we are going through the task list backwards in order to compute
         # the successor time
-        successor_time = -1    # start with -1 so that we get (total task time - 1)
+        # start with -1 so that we get (total task time - 1)
+        successor_time = -1
         current_job = self.tasks[-1].job
         for task in self.tasks[::-1]:
             # Check if task is in current_job
@@ -244,7 +232,8 @@ class JobShopScheduler:
 
             successor_time += task.duration
             for t in range(successor_time):
-                label = get_label(task, (self.max_time - 1) - t) # -1 for zero-indexed time
+                # -1 for zero-indexed time
+                label = get_label(task, (self.max_time - 1) - t)
                 self.csp.fix_variable(label, 0)
 
     def get_bqm(self, stitch_kwargs=None):
@@ -252,7 +241,7 @@ class JobShopScheduler:
         Args:
             stitch_kwargs: A dict. Kwargs to be passed to dwavebinarycsp.stitch.
         """
-        if stitch_kwargs == None:
+        if stitch_kwargs is None:
             stitch_kwargs = {}
 
         # Apply constraints to self.csp
