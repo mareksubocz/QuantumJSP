@@ -5,7 +5,7 @@ from bisect import bisect_right
 import dwavebinarycsp
 
 
-def get_jss_bqm(job_dict, max_time=None, stitch_kwargs={}):
+def get_jss_bqm(job_dict, max_time=None, stitch_kwargs=None):
     """Returns a BQM to the Job Shop Scheduling problem.
     Args:
         job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
@@ -44,6 +44,8 @@ def get_jss_bqm(job_dict, max_time=None, stitch_kwargs={}):
           - Job a's 1st task is ("oven", 1)
           - Hence, at time 0, Job a's 1st task is not run
     """
+    if stitch_kwargs is None:
+        stitch_kwargs = {}
 
     scheduler = JobShopScheduler(job_dict, max_time)
     return scheduler.get_bqm(stitch_kwargs)

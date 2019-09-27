@@ -1,7 +1,12 @@
 {
-  "python.linting.pylintEnabled": true,
-  "python.linting.enabled": true,
-  "python.linting.flake8Enabled": false,
-  "python.linting.pep8Enabled": false,
-  "python.pythonPath": "/Users/mareksubocz/.pyenv/versions/3.7.4/bin/python"
+  "spellright.language": [
+    "en",
+    "pl"
+  ],
+  "spellright.documentTypes": [
+    "markdown",
+    "latex",
+    "plaintext",
+    "python"
+  ]
 }
