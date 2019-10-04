@@ -14,35 +14,29 @@ from instance_parser import readInstance
 from pprint import pprint
 
 jobs = readInstance("/Users/mareksubocz/Downloads/ft06.txt")
-pprint(jobs)
 
-# jobs = {"1": [("a", 2), ("b", 1), ("c", 1)],
-#         "2": [("b", 1), ("c", 2), ("d", 1)],
-#         "3": [("c", 1), ("d", 1), ("b", 2)],
-#         "4": [("d", 1), ("a", 1), ("a", 2)],
-#         "5": [("b", 1), ("c", 1), ("d", 2)]}
+# pprint(jobs)
 
-# jobs = {"1": [("2", 1), ("0", 3), ("1", 6), ("3", 7), ("5", 3), ("4", 6)],
-#         "2": [("1", 8), ("2", 5), ("4", 10), ("5", 10), ("0", 10), ("3", 4)],
-#         "3": [("2", 5), ("3", 4), ("5", 8), ("0", 9), ("1", 1), ("4", 7)],
-#         "4": [("1", 5), ("0", 5), ("2", 5), ("3", 3), ("4", 8), ("5", 9)],
-#         "5": [("2", 9), ("1", 3), ("4", 5), ("5", 4), ("0", 3), ("3", 1)],
-#         "6": [("1", 3), ("3", 3), ("5", 9), ("0", 10), ("4", 4), ("2", 1)]}
+jobs = {"1": [("0", 2), ("1", 2)],
+        "2": [("1", 1), ("0", 3)]}
 
-max_time = 55
 
-bqm = get_jss_bqm(jobs, max_time, stitch_kwargs={'min_classical_gap': 2.0})
+max_time = 9
+
+bqm = get_jss_bqm(jobs, max_time, disabled_times={"0": [(3, 6)]}, stitch_kwargs={'min_classical_gap': 2.0})
 
 # Submit BQM
 # sampler = EmbeddingComposite(DWaveSampler(solver={'qpu': True}))
 # sampleset = sampler.sample(bqm, chain_strength=1, num_reads=1000)
 
 # Test Locally
-sampler = neal.SimulatedAnnealingSampler()
-sampleset = sampler.sample(bqm, num_reads=1000)
+# sampler = neal.SimulatedAnnealingSampler()
+# sampleset = sampler.sample(bqm, num_reads=1000)
 
 # Node pattern:
 # <job>_<task_index>,<time>
+
+# TODO: sprawdź czy rozwiązanie jest prawidłowe
 
 
 def printResults():
@@ -102,8 +96,8 @@ def printResults():
 
         task_times[job_name][task_index] = start_time
 
-    # for job, times in task_times.items():
-    #     print("{0:9}: {1}".format(job, times))
+    for job, times in task_times.items():
+        print("{0:9}: {1}".format(job, times))
 
     print(solution_dict)
     return solution_dict
@@ -116,18 +110,18 @@ sdl = printResults()
 plt.plot(list(sdl.keys()), list(sdl.values()), 'ro')
 # plt.xticks(range(len(sdl)), list(sdl.keys()))
 
-# Submit BQM
-sampler = EmbeddingComposite(DWaveSampler(solver={'qpu': True}))
-sampleset = sampler.sample(bqm, chain_strength=3, num_reads=1000)
-sdq = printResults()
-plt.plot(list(sdq.keys()), list(sdq.values()), 'bo')
-# plt.xticks(range(len(sdq)), list(sdq.keys()))
-plt.legend(["Lokalnie", "Na QPU"])
-plt.title(f'Dla {len(jobs)} jobów po {len(jobs["1"])} zadania, maksymalny czas: {max_time}')
-plt.xlabel(f'Cmax\n\nWyniki lokalne:\n{str(sdl)}\nWyniki na QPU:\n{str(sdq)}')
-plt.ylabel('liczba wystąpień')
-plt.subplots_adjust(bottom=0.28)
-plt.show()
+# # Submit BQM
+# sampler = EmbeddingComposite(DWaveSampler(solver={'qpu': True}))
+# sampleset = sampler.sample(bqm, chain_strength=3, num_reads=1000)
+# sdq = printResults()
+# plt.plot(list(sdq.keys()), list(sdq.values()), 'bo')
+# # plt.xticks(range(len(sdq)), list(sdq.keys()))
+# plt.legend(["Lokalnie", "Na QPU"])
+# plt.title(f'Dla {len(jobs)} jobów po {len(jobs["1"])} zadania, maksymalny czas: {max_time}')
+# plt.xlabel(f'Cmax\n\nWyniki lokalne:\n{str(sdl)}\nWyniki na QPU:\n{str(sdq)}')
+# plt.ylabel('liczba wystąpień')
+# plt.subplots_adjust(bottom=0.28)
+# plt.show()
 
 # print("Number of jobs:", len(jobs))
 # print("Number of tasks in each job:", len(jobs["1"]))
