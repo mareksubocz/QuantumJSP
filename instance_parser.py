@@ -1,5 +1,8 @@
 from bisect import insort
+
 from collections import defaultdict
+
+from job_shop_scheduler import get_label, Task
 
 
 def readInstance(path: str) -> dict:
@@ -16,10 +19,53 @@ def readInstance(path: str) -> dict:
 
 
 def transformToMachineDict(jobs: dict, solution: dict) -> dict:
+    """Given a solution to a problem from the first argument,
+    produces a dictionary indicating the work timeline for each machine.
+
+    Args:
+        jobs (dict): description of an instance
+        solution (dict): solution to an instance:
+        {"job_1": [start_time_of_operation_1, start_time of operation_2],
+         "job_2": [start_time_of_operation_1, start_time of operation_2]}
+
+    Returns:
+        dict: [description]
+    """
     machine_dict = defaultdict(list)
     for key, value in solution.items():
-        for i in len(value):
-            machine_dict[jobs[key][i][0]].insort((value[i], jobs[key][i][1]))
+        for i in range(len(value)):
+            machine_dict[jobs[key][i][0]].append((value[i], jobs[key][i][1]))
+    return machine_dict
+
+
+def find_time_window(jobs: dict, solution: dict, start: int, end: int):
+    new_jobs = defaultdict(list)
+    disabled_times = defaultdict(list)
+    disabled_variables = []
+    for job_name, start_times in solution.items():
+        for i, start_time in enumerate(start_times):
+            if(start_time >= start and start_time + jobs[job_name][i][1] <= end):
+                # an operation fits into the time window
+                new_jobs[job_name].append(jobs[job_name][i])
+
+            elif (start <= start_time < end and start_time + jobs[job_name][i][1] > end):
+                # an operation reaches out of the time window from right side
+                if i > 0:
+                    for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
+                        disabled_variables.append(get_label(Task(job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x))
+                disabled_times[job_name].append((start_time, end))
+
+            elif (start_time < start and start <= start_time + jobs[job_name][i][1] <= end):
+                # an operation reaches out of the time window from left side
+                if i < len(jobs[job_name]) - 1:
+                    for x in range(start, start_time + jobs[job_name][i][1]):
+                        disabled_variables.append(get_label(Task(job_name, i+1, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x))
+                disabled_times[job_name].append((start, start_time + jobs[job_name][i][1]))
+
+            # If an operation reaches out of the time window from both sides,
+            # do nothing, it's not going to be a problem
+
+    return new_jobs, disabled_times, disabled_variables
 
 
 def checkValidity(jobs: dict, solution: dict) -> bool:

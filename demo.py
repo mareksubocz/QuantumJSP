@@ -9,17 +9,20 @@ from dwave.system.samplers import DWaveSampler
 
 from job_shop_scheduler import get_jss_bqm
 
-from instance_parser import readInstance
+from instance_parser import readInstance, transformToMachineDict, find_time_window
 
 from pprint import pprint
 
-jobs = readInstance("/Users/mareksubocz/Downloads/ft06.txt")
+# jobs = readInstance("/Users/mareksubocz/Downloads/ft06.txt")
 
-# pprint(jobs)
 
 jobs = {"1": [("0", 2), ("1", 2)],
         "2": [("1", 1), ("0", 3)]}
 
+solution = {"1": [0, 2],
+            "2": [4, 6]}
+
+pprint(find_time_window(jobs, solution, 1, 6))
 
 max_time = 9
 
