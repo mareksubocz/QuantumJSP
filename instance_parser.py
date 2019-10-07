@@ -44,7 +44,7 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     disabled_variables = []
     for job_name, start_times in solution.items():
         for i, start_time in enumerate(start_times):
-            if(start_time >= start and start_time + jobs[job_name][i][1] <= end):
+            if start_time >= start and start_time + jobs[job_name][i][1] <= end:
                 # an operation fits into the time window
                 new_jobs[job_name].append(jobs[job_name][i])
 
@@ -52,20 +52,51 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
                 # an operation reaches out of the time window from right side
                 if i > 0:
                     for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
-                        disabled_variables.append(get_label(Task(job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x))
-                disabled_times[job_name].append((start_time, end))
+                        disabled_variables.append(get_label(Task(job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x - start))
+                disabled_times[jobs[job_name][i][0]].append((start_time - start, end - start))
 
             elif (start_time < start and start <= start_time + jobs[job_name][i][1] <= end):
                 # an operation reaches out of the time window from left side
-                if i < len(jobs[job_name]) - 1:
+                if i < len(start_times) - 1:
                     for x in range(start, start_time + jobs[job_name][i][1]):
-                        disabled_variables.append(get_label(Task(job_name, i+1, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x))
-                disabled_times[job_name].append((start, start_time + jobs[job_name][i][1]))
+                        disabled_variables.append(get_label(Task(job_name, i+1, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x - start))
+                disabled_times[jobs[job_name][i][0]].append((0, start_time + jobs[job_name][i][1] - start))
 
             # If an operation reaches out of the time window from both sides,
             # do nothing, it's not going to be a problem
 
     return new_jobs, disabled_times, disabled_variables
+
+
+# FIXME: It doesn't work if jobs have different number of operations
+def solve_greedily(jobs: dict, max_time):
+    free_space = {}
+    solution = defaultdict(list)
+    max_num_of_operations = 0
+    for _, operations in jobs.items():
+        if(len(operations) > max_num_of_operations):
+            max_num_of_operations = len(operations)
+        for machine, _ in operations:
+            free_space[machine] = [(0, max_time)]
+
+    for i in range(max_num_of_operations):
+        for name, operations in jobs.items():
+            machine, length = jobs[name][i]
+            for j, space in enumerate(free_space[machine]):
+                if i == 0 and space[1] - space[0] >= length:
+                    solution[name].append(space[0])
+                    free_space[machine][j] = (space[0] + length, space[1])
+                    break
+                elif space[1] - max(space[0], solution[name][i-1] + jobs[name][i-1][1]) >= length:
+                    startpoint = max(space[0], solution[name][i-1] + jobs[name][i-1][1])
+                    solution[name].append(startpoint)
+                    new_space_1 = (space[0], startpoint)
+                    new_space_2 = (startpoint + length, space[1])
+                    free_space[machine].pop(j)
+                    free_space[machine].insert(j, new_space_2)
+                    free_space[machine].insert(j, new_space_1)
+                    break
+    return solution
 
 
 def checkValidity(jobs: dict, solution: dict) -> bool:

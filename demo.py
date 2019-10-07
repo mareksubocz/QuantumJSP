@@ -9,24 +9,40 @@ from dwave.system.samplers import DWaveSampler
 
 from job_shop_scheduler import get_jss_bqm
 
-from instance_parser import readInstance, transformToMachineDict, find_time_window
+from instance_parser import readInstance, transformToMachineDict, find_time_window, solve_greedily
 
 from pprint import pprint
 
-# jobs = readInstance("/Users/mareksubocz/Downloads/ft06.txt")
+jobs = readInstance("/Users/mareksubocz/Downloads/ft06.txt")
+# old_jobs = {"1": [(0, 4), (1, 2), (2, 3), (2, 1), (1, 2)],
+#             "2": [(1, 5), (0, 1), (2, 2), (0, 2), (2, 3)],
+#             "3": [(1, 3), (2, 2), (0, 2), (0, 1), (1, 3)]}
+pprint(jobs)
+pprint(solve_greedily(jobs, 70))
 
+# jobs2 = {"a": [("0", 2), ("1", 2)],
+#          "b": [("1", 1), ("0", 3)]}
 
-jobs = {"1": [("0", 2), ("1", 2)],
-        "2": [("1", 1), ("0", 3)]}
+# jobs = {"a": [("1", 2)],
+#         "b": [("0", 1)]}
 
-solution = {"1": [0, 2],
-            "2": [4, 6]}
+solution = {"1": [0, 8, 10, 15, 16],
+            "2": [0, 5, 13, 15, 17],
+            "3": [5, 8, 10, 17, 18]}
+# trwa 21
+# pprint(find_time_window(jobs, solution, 1, 6))
 
-pprint(find_time_window(jobs, solution, 1, 6))
+max_time = 5
 
-max_time = 9
+tw_start = 10
+tw_end = 17
+jobs, disabled_times, disabled_variables = find_time_window(old_jobs, solution, tw_start, tw_end)
+pprint(jobs)
+pprint(disabled_times)
+pprint(disabled_variables)
+# bqm = get_jss_bqm(jobs, max_time, stitch_kwargs={'min_classical_gap': 2.0})
 
-bqm = get_jss_bqm(jobs, max_time, disabled_times={"0": [(3, 6)]}, stitch_kwargs={'min_classical_gap': 2.0})
+bqm = get_jss_bqm(jobs, tw_end - tw_start, disabled_times, disabled_variables, stitch_kwargs={'min_classical_gap': 2.0})
 
 # Submit BQM
 # sampler = EmbeddingComposite(DWaveSampler(solver={'qpu': True}))
@@ -55,7 +71,6 @@ def printResults():
     ):
         error_found = False
         total = total + occurrences
-
         selected_nodes = [k for k, v in sample.items() if v ==
                           1 and not k.startswith('aux')]
 
@@ -106,11 +121,26 @@ def printResults():
     return solution_dict
 
 
-# Test Locally
+# ***************** Test Locally *******************
 sampler = neal.SimulatedAnnealingSampler()
 sampleset = sampler.sample(bqm, num_reads=1000)
-sdl = printResults()
-plt.plot(list(sdl.keys()), list(sdl.values()), 'ro')
+solution1 = sampleset.first.sample
+selected_nodes = [k for k, v in solution1.items() if v ==
+                  1 and not k.startswith('aux')]
+# Parse node information
+task_times = {k: [-1] * len(v) for k, v in jobs.items()}
+for node in selected_nodes:
+    job_name, task_time = node.rsplit("_", 1)
+    task_index, start_time = map(int, task_time.split(","))
+
+    task_times[job_name][task_index] = start_time
+
+for job, times in task_times.items():
+    print("{0:9}: {1}".format(job, times))
+
+# sdl = printResults()
+# **************************************************
+# plt.plot(list(sdl.keys()), list(sdl.values()), 'ro')
 # plt.xticks(range(len(sdl)), list(sdl.keys()))
 
 # # Submit BQM
