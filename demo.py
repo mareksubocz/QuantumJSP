@@ -5,7 +5,7 @@ import time
 import neal
 
 from dwave.system.composites import EmbeddingComposite
-from disable_tilllers import DWaveSampler
+from dwave.system.samplers import DWaveSampler
 
 from job_shop_scheduler import get_jss_bqm
 
