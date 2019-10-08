@@ -38,8 +38,10 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
     return machine_dict
 
 
+# FIXME: zmien sposob ograniczania startów operacji w tych samych jobach
 def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     new_jobs = defaultdict(list)
+    operations_indexes = defaultdict(list)
     disabled_times = defaultdict(list)
     disabled_variables = []
     for job_name, start_times in solution.items():
@@ -47,6 +49,7 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
             if start_time >= start and start_time + jobs[job_name][i][1] <= end:
                 # an operation fits into the time window
                 new_jobs[job_name].append(jobs[job_name][i])
+                operations_indexes[job_name].append(i)
 
             elif (start <= start_time < end and start_time + jobs[job_name][i][1] > end):
                 # an operation reaches out of the time window from right side
@@ -65,10 +68,9 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
             # If an operation reaches out of the time window from both sides,
             # do nothing, it's not going to be a problem
 
-    return new_jobs, disabled_times, disabled_variables
+    return new_jobs, operations_indexes, disabled_times, disabled_variables
 
 
-# FIXME: It doesn't work if jobs have different number of operations
 def solve_greedily(jobs: dict, max_time):
     free_space = {}
     solution = defaultdict(list)
@@ -81,6 +83,8 @@ def solve_greedily(jobs: dict, max_time):
 
     for i in range(max_num_of_operations):
         for name, operations in jobs.items():
+            if i >= len(operations):
+                continue
             machine, length = jobs[name][i]
             for j, space in enumerate(free_space[machine]):
                 if i == 0 and space[1] - space[0] >= length:

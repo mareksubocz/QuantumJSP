@@ -1,6 +1,6 @@
-Job Shop Scheduling Demo
+Quantum-Based Job Shop Scheduling
 ========================
-A demo on how to optimally schedule jobs using a quantum computer.
+A heuristic approach on how to optimally schedule jobs using a quantum computer.
 
 Given a set of jobs and a finite number of machines, how should we schedule
 our jobs on those machines such that all our jobs are completed at the
@@ -42,8 +42,13 @@ To run the demo:
 Code Overview
 -------------
 Most of the Job Shop Scheduling magic happens in ``job_shop_scheduler.py``, so
-the following overview is on that code. (Note: the ``job_shop_scheduler``
-module gets imported into ``demo.py``.)
+the following overview is on that code. You can find most of the utility functions
+in ``instance_parser.py``
+
+The find_time_window function from ``instance_parser.py`` cuts out the jobs
+that happen between some time points from the main instance. It also contains
+a couple ways of ensuring that the resulting time window can be passed to
+a quantum computer to solve without interfering with the rest of the instance.
 
 In the ``job_shop_scheduler.py``, we describe the Job Shop Scheduling Problem
 with the following constraints:

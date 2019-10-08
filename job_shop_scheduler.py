@@ -264,7 +264,7 @@ class JobShopScheduler:
 
         # Times that are manually disabled
         for label in disabled_variables:
-            if(label in self.csp.variables):
+            if label in self.csp.variables:
                 self.csp.fix_variable(label, 0)
 
     def get_bqm(self, disabled_times, disabled_variables, stitch_kwargs=None):

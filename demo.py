@@ -36,7 +36,7 @@ max_time = 5
 
 tw_start = 10
 tw_end = 17
-jobs, disabled_times, disabled_variables = find_time_window(old_jobs, solution, tw_start, tw_end)
+jobs, disabled_times, disabled_variables = find_time_window(jobs, solution, tw_start, tw_end)
 pprint(jobs)
 pprint(disabled_times)
 pprint(disabled_variables)
@@ -54,8 +54,6 @@ bqm = get_jss_bqm(jobs, tw_end - tw_start, disabled_times, disabled_variables, s
 
 # Node pattern:
 # <job>_<task_index>,<time>
-
-# TODO: sprawdź czy rozwiązanie jest prawidłowe
 
 
 def printResults():
