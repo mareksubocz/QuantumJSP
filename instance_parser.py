@@ -42,33 +42,44 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
 def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     new_jobs = defaultdict(list)
     operations_indexes = defaultdict(list)
-    disabled_times = defaultdict(list)
+    disable_till = {}
     disabled_variables = []
     for job_name, start_times in solution.items():
         for i, start_time in enumerate(start_times):
-            if start_time >= start and start_time + jobs[job_name][i][1] <= end:
+
+            machine = jobs[job_name][i][0]
+            end_time = start_time + jobs[job_name][i][1]
+
+            if start_time >= start and end_time <= end:
                 # an operation fits into the time window
                 new_jobs[job_name].append(jobs[job_name][i])
                 operations_indexes[job_name].append(i)
 
-            elif (start <= start_time < end and start_time + jobs[job_name][i][1] > end):
-                # an operation reaches out of the time window from right side
-                if i > 0:
-                    for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
-                        disabled_variables.append(get_label(Task(job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x - start))
-                disabled_times[jobs[job_name][i][0]].append((start_time - start, end - start))
+            # MAYBE we don't need to check this one, as it will
+            # sort itself out later on
 
-            elif (start_time < start and start <= start_time + jobs[job_name][i][1] <= end):
-                # an operation reaches out of the time window from left side
+            # elif (start <= start_time < end and start_time + jobs[job_name][i][1] > end):
+            #     # an operation reaches out of the time window from right side
+            #     if i > 0:
+            #         for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
+            #             disabled_variables.append(get_label(Task(job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x - start))
+            #     disabled_times[jobs[job_name][i][0]].append((start_time - start, end - start))
+
+            elif (start_time < start and start < end_time <= end):
+                # an operation reaches out of the time window from the left side
                 if i < len(start_times) - 1:
-                    for x in range(start, start_time + jobs[job_name][i][1]):
-                        disabled_variables.append(get_label(Task(job_name, i+1, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x - start))
-                disabled_times[jobs[job_name][i][0]].append((0, start_time + jobs[job_name][i][1] - start))
+                    for x in range(end_time - start):
+                        disabled_variables.append(get_label(Task(
+                            job_name, 0, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x))
+                if machine in disable_till.keys():
+                    disable_till[machine] = max(disable_till[machine], end_time - start)
+                else:
+                    disable_till[machine] = end_time - start
 
             # If an operation reaches out of the time window from both sides,
             # do nothing, it's not going to be a problem
 
-    return new_jobs, operations_indexes, disabled_times, disabled_variables
+    return new_jobs, operations_indexes, disable_till, disabled_variables
 
 
 def solve_greedily(jobs: dict, max_time):

@@ -28,11 +28,19 @@ from pprint import pprint
 #  5: [6, 16, 30, 40, 50, 54],
 #  6: [13, 16, 19, 28, 43, 47]}
 
+better_solution = {1: [0, 1, 19, 25, 40, 47],
+                   2: [0, 15, 20, 30, 40, 50],
+                   3: [1, 6, 10, 18, 27, 53],
+                   4: [8, 13, 20, 32, 35, 47],
+                   5: [6, 16, 30, 43, 50, 54],
+                   6: [13, 16, 19, 28, 43, 47]}
+
 jobs = readInstance("/Users/mareksubocz/Downloads/ft06.txt")
 
 max_time = 61
-window_size = 6
+window_size = 12
 solution = solve_greedily(jobs, max_time)
+solution = better_solution
 sampler = neal.SimulatedAnnealingSampler()
 
 pprint(jobs)
@@ -41,16 +49,16 @@ pprint(solution)
 # pprint(find_time_window(jobs, solution, 24, 31))
 
 for i in range(max_time - window_size):
-    new_jobs, operations_indexes, disabled_times, disabled_variables = find_time_window(jobs, solution, i, i + window_size)
-    print(" \/" * 50)
-    pprint(new_jobs)
-    pprint(disabled_times)
-    pprint(disabled_variables)
-    print(" /\\" * 50)
+    new_jobs, operations_indexes, disable_till, disabled_variables = find_time_window(jobs, solution, i, i + window_size)
+    # print(" \/" * 50)
+    # pprint(new_jobs)
+    # pprint(disable_till)
+    # pprint(disabled_variables)
+    # print(" /\\" * 50)
     if not bool(new_jobs):  # if new_jobs dict is empty
         continue
     try:
-        bqm = get_jss_bqm(new_jobs, window_size + 1, disabled_times, disabled_variables, stitch_kwargs={'min_classical_gap': 2.0})
+        bqm = get_jss_bqm(new_jobs, window_size + 1, disable_till, disabled_variables, stitch_kwargs={'min_classical_gap': 2.0})
     except ImpossibleBQM:
         print('*' * 25 + " It's impossible to construct a BQM " + '*' * 25)
         continue
@@ -66,8 +74,9 @@ for i in range(max_time - window_size):
 
         task_times[int(job_name)][task_index] = start_time
 
-    for job, times in task_times.items():
-        print("{0:9}: {1}".format(job, times))
+    pprint(task_times)
+    pprint(disable_till)
+    pprint(disabled_variables)
 
     print(i)
 
