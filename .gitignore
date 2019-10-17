@@ -1,2 +1,6 @@
-report/
+report/*
+!report/final_report.tex
+
 __pycache__/
+
+test.py

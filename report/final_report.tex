@@ -1,0 +1,122 @@
+\documentclass[letterpaper, 11pt]{article} 
+
+\usepackage{graphics,graphicx}
+\usepackage{multicol} 
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage[english, polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage[title]{appendix}
+\usepackage{wasysym}
+\usepackage{url}
+
+\usepackage[font=footnotesize,labelfont=small]{caption}
+\captionsetup{width=0.85\linewidth}
+
+\RequirePackage{geometry}
+\geometry{margin=2cm}
+
+\selectlanguage{english}
+\setlength{\parskip}{0.2cm}
+\setlength{\parindent}{0pt}
+
+
+%----------------------------------------------------------------------------------------
+%	BASIC INFO
+%----------------------------------------------------------------------------------------
+
+
+\title{Report of our work on Job Shop Scheduling using D-Wave System's Quantum Annealing}
+\author{
+Marek Subocz, Krzysztof Kurowski \\
+\textit{Poznan Supercomputing and Networking Center (PSNC)}
+}
+\date{10 Oct 2019}
+%--------------------------------------------------------------------------------CUERPO-----------------------------------------%
+\begin{document}
+\maketitle
+We attempted to harness Quantum Computing speed to improve the 
+performance of already existing heuristics, particularily 
+for Job Shop Scheduling Problem. Our main concern was to bypass
+its small number of computing units, and therefore small size
+of a computable instance, to acquire the advantage of quantum
+mechanics in D-Wave's quantum annealing algorithm. 
+\vspace{10pt}
+\begin{multicols}{2}
+\section{Introduction}
+\label{sec:intro}
+\subsection{Problem definition}
+The JSP is an minimization problem consisting of a set of jobs 
+$J = \{\textbf{j}_1,\dots,\textbf{j}_N\}$
+that must be scheduled on a set of machines
+$M = \{\textbf{m}_1, \dots, \textbf{m}_M\}$. 
+Each job consists of a sequence of operations that have to be performed
+in a predefined order:
+\begin{equation}
+\textbf{j}_n = \{O_{n1} \rightarrow O_{n2} \rightarrow \dots \rightarrow O_{nLn}\}
+\end{equation}
+Each operation has only one machine it can be performed on and an
+integer execution time $t_{nj} \geq 0$.
+Also, there can only be one operation running on a given machine at 
+any given point in time and each operation of a job needs to complete 
+before the following one can start. The main objective is to schedule
+all operations in a valid sequence while minimizing total schedule time.
+\\
+In our algorithm we use a repeatedly executed sequence to hopefully
+fully explore a small instance's possibilities. To do this, we convert
+a given JSP problem to Quadratic Unconstrained Binary Optimization
+Problem (QUBO). 
+
+\subsection{QUBO Problem Formulation}
+With our approach we define a given JSP instance with $n_O * T$
+binary variables, where $n_O$ is the total number of operations and
+$T$ is the upper bound for considered scheduling times. Every
+operation has a binary variable for every point in time:
+\begin{equation}
+    x_{i,t} =
+    \begin{cases}
+        \text{ 1 : operation $O_i$ starts at time $t$,} \\
+        \text{ 0 : otherwise.}
+    \end{cases}
+\end{equation}
+\subsection{Constraints}
+It would be too expensive and imprecise to perform a quantum 
+annealing computation on all these variables and combinations of
+possible outcomes. Because of that, we put some constraints on
+what is regarded as a viable solution and eliminate (lock on the
+value of 0) some of the variables completely.
+\subsubsection{One start constraint}
+Every operation needs to have just one start point and therefore all of
+it's variables need to sum to one. 
+\subsubsection{Precedence constraint}
+Every operation needs to start after the previous one from the same job
+has ended. We make sure of that by checking if every operation's 
+start point occurs at $previous\_start\_point + previous\_length$ or later.
+\subsubsection{Share machine constraint}
+Every machine can perform up to one operation at a time. To assure that
+this constraint is not violated, we group all of the variables by it's
+corresponding machines and check if the operations interfere in any way.
+\subsection{Variable pruning}
+Some of the QUBO variables can be eliminated in a precomputing phase,
+improving the robustness of quantum annealing. 
+% TODO: graph edge cutout picture
+\subsubsection{Too early for a task}
+We disable all of the variables $0 \leq x_{i,j} < S$, where $S$ is the sum of lengths of all the operations \textbf{prior to} the considered one in the same job.
+\subsubsection{Too late for a task}
+We disable all of the variables $T-S \leq x_{i,j} < T$, where $S$ is the sum of lengths of all the operations \textbf{after} the considered one in the same job.
+\subsubsection{Disabled regions}
+
+\subsubsection{Other disabled variables}
+
+% TODO: liczba i topologia połączeń kubitów
+
+\subsection{Greedy algorithm}
+In order to use our heuristic approach, we need to already have a solution
+that we will improve. While the kind of such a solution that is the best for
+combining a substantial diversity of possible solutions and starting reliably
+close to an optimum is a subject for debate,
+
+\end{multicols}
+\end{document}

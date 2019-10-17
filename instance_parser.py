@@ -102,7 +102,7 @@ def solve_greedily(jobs: dict, max_time):
                     solution[name].append(space[0])
                     free_space[machine][j] = (space[0] + length, space[1])
                     break
-                elif space[1] - max(space[0], solution[name][i-1] + jobs[name][i-1][1]) >= length:
+                elif i > 0 and space[1] - max(space[0], solution[name][i-1] + jobs[name][i-1][1]) >= length:
                     startpoint = max(space[0], solution[name][i-1] + jobs[name][i-1][1])
                     solution[name].append(startpoint)
                     new_space_1 = (space[0], startpoint)
@@ -121,3 +121,10 @@ def checkValidity(jobs: dict, solution: dict) -> bool:
             if(i < len(value)-1 and start_time + jobs[key][i][1] > solution[key][i+1]):
                 return False
     return True
+
+
+def get_result(jobs, solution):
+    max_time = 0
+    for job in jobs:
+        max_time = max(max_time, solution[job][-1] + job[-1][1])
+    return max_time

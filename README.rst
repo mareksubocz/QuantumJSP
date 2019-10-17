@@ -41,7 +41,7 @@ To run the demo:
 
 Code Overview
 -------------
-Most of the Job Shop Scheduling magic happens in ``job_shop_scheduler.py``, so
+Most of the Job Shop Scheduling magic happens in `job_shop_scheduler.py <https://github.com/mareksubocz/QuantumJSP/blob/master/job_shop_scheduler.py>`_, so
 the following overview is on that code. You can find most of the utility functions
 in ``instance_parser.py``
 
