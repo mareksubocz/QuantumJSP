@@ -1,5 +1,4 @@
-report/*
-!report/final_report.tex
+report/
 
 __pycache__/
 
