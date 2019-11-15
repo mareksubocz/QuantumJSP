@@ -3,3 +3,5 @@ report/
 __pycache__/
 
 test.py
+
+.vscode/

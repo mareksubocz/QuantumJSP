@@ -4,6 +4,12 @@ from collections import defaultdict
 
 from job_shop_scheduler import get_label, Task
 
+from pprint import pprint
+
+from random import shuffle
+
+from math import inf
+
 
 def readInstance(path: str) -> dict:
     job_dict = defaultdict(list)
@@ -42,7 +48,8 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
 def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     new_jobs = defaultdict(list)
     operations_indexes = defaultdict(list)
-    disable_till = {}
+    disable_till = defaultdict(int)
+    disable_since = defaultdict(lambda: inf)
     disabled_variables = []
     for job_name, start_times in solution.items():
         for i, start_time in enumerate(start_times):
@@ -55,31 +62,26 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
                 new_jobs[job_name].append(jobs[job_name][i])
                 operations_indexes[job_name].append(i)
 
-            # MAYBE we don't need to check this one, as it will
-            # sort itself out later on
+            elif (start <= start_time < end and end_time > end):
+                # an operation reaches out of the time window from right side
+                if i > 0:
+                    for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
+                        disabled_variables.append(get_label(Task(
+                            job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x - start))
+                disable_since[machine] = min(disable_since[machine], start_time - start)
 
-            # elif (start <= start_time < end and start_time + jobs[job_name][i][1] > end):
-            #     # an operation reaches out of the time window from right side
-            #     if i > 0:
-            #         for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
-            #             disabled_variables.append(get_label(Task(job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x - start))
-            #     disabled_times[jobs[job_name][i][0]].append((start_time - start, end - start))
-
-            elif (start_time < start and start < end_time <= end):
+            elif start_time < start and start < end_time <= end:
                 # an operation reaches out of the time window from the left side
                 if i < len(start_times) - 1:
                     for x in range(end_time - start):
                         disabled_variables.append(get_label(Task(
                             job_name, 0, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x))
-                if machine in disable_till.keys():
-                    disable_till[machine] = max(disable_till[machine], end_time - start)
-                else:
-                    disable_till[machine] = end_time - start
+                disable_till[machine] = max(disable_till[machine], end_time - start)
 
             # If an operation reaches out of the time window from both sides,
             # do nothing, it's not going to be a problem
 
-    return new_jobs, operations_indexes, disable_till, disabled_variables
+    return new_jobs, operations_indexes, disable_till, disable_since, disabled_variables
 
 
 def solve_greedily(jobs: dict, max_time):
@@ -87,13 +89,16 @@ def solve_greedily(jobs: dict, max_time):
     solution = defaultdict(list)
     max_num_of_operations = 0
     for _, operations in jobs.items():
-        if(len(operations) > max_num_of_operations):
+        if len(operations) > max_num_of_operations:
             max_num_of_operations = len(operations)
         for machine, _ in operations:
             free_space[machine] = [(0, max_time)]
 
+    jobs_shuffled = list(jobs.items())
+    shuffle(jobs_shuffled)
+
     for i in range(max_num_of_operations):
-        for name, operations in jobs.items():
+        for name, operations in jobs_shuffled:
             if i >= len(operations):
                 continue
             machine, length = jobs[name][i]
@@ -114,17 +119,46 @@ def solve_greedily(jobs: dict, max_time):
     return solution
 
 
+def solve_worse(jobs: dict, max_time):
+    free_space = {}
+    solution = defaultdict(list)
+    for _, operations in jobs.items():
+        for machine, _ in operations:
+            free_space[machine] = [(0, max_time)]
+
+    jobs_shuffled = list(jobs.items())
+    shuffle(jobs_shuffled)
+
+    for name, operations in jobs_shuffled:
+        for i, (machine, length) in enumerate(operations):
+            for j, (start, end) in enumerate(free_space[machine]):
+                if i == 0 and end - start >= length:
+                    solution[name].append(start)
+                    free_space[machine][j] = (start + length, end)
+                    break
+                elif i > 0 and end - max(start, solution[name][i-1] + jobs[name][i-1][1]) >= length:
+                    startpoint = max(start, solution[name][i-1] + jobs[name][i-1][1])
+                    solution[name].append(startpoint)
+                    new_space_1 = (start, startpoint)
+                    new_space_2 = (startpoint + length, end)
+                    free_space[machine].pop(j)
+                    free_space[machine].insert(j, new_space_2)
+                    free_space[machine].insert(j, new_space_1)
+                    break
+    return solution
+
+
 def checkValidity(jobs: dict, solution: dict) -> bool:
     # checking if every operation ends before next one starts
     for key, value in solution.items():
         for i, start_time in enumerate(value):
-            if(i < len(value)-1 and start_time + jobs[key][i][1] > solution[key][i+1]):
+            if i < len(value)-1 and start_time + jobs[key][i][1] > solution[key][i+1]:
                 return False
     return True
 
 
 def get_result(jobs, solution):
     max_time = 0
-    for job in jobs:
-        max_time = max(max_time, solution[job][-1] + job[-1][1])
+    for job, operations in jobs.items():
+        max_time = max(max_time, solution[job][-1] + operations[-1][1])
     return max_time

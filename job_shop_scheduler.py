@@ -6,7 +6,7 @@ from os import PathLike
 import dwavebinarycsp
 
 
-def get_jss_bqm(job_dict, max_time, disable_till=None, disabled_variables=None, stitch_kwargs=None):
+def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, stitch_kwargs=None):
     """Returns a BQM to the Job Shop Scheduling problem.
     Args:
         job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
@@ -49,11 +49,13 @@ def get_jss_bqm(job_dict, max_time, disable_till=None, disabled_variables=None, 
         stitch_kwargs = {}
     if disable_till is None:
         disable_till = {}
+    if disable_since is None:
+        disable_since = {}
     if disabled_variables is None:
         disabled_variables = []
 
     scheduler = JobShopScheduler(job_dict, max_time)
-    return scheduler.get_bqm(disable_till, disabled_variables, stitch_kwargs)
+    return scheduler.get_bqm(disable_till, disable_since, disabled_variables, stitch_kwargs)
 
 
 def sum_to_one(*args):
@@ -207,7 +209,7 @@ class JobShopScheduler:
                             self.csp.add_constraint(valid_values, {current_label,
                                                                    get_label(other_task, tt)})
 
-    def _remove_absurd_times(self, disable_till: dict, disabled_variables):
+    def _remove_absurd_times(self, disable_till: dict, disable_since, disabled_variables):
         """Sets impossible task times in self.csp to 0.
 
         Args:
@@ -258,13 +260,18 @@ class JobShopScheduler:
                     label = get_label(task, i)
                     if label in self.csp.variables:
                         self.csp.fix_variable(label, 0)
+            elif task.machine in disable_since.keys():
+                for i in range(disable_since[task.machine], self.max_time):
+                    label = get_label(task, i)
+                    if label in self.csp.variables:
+                        self.csp.fix_variable(label, 0)
 
         # Times that are manually disabled
         for label in disabled_variables:
             if label in self.csp.variables:
                 self.csp.fix_variable(label, 0)
 
-    def get_bqm(self, disable_till, disabled_variables, stitch_kwargs=None):
+    def get_bqm(self, disable_till, disable_since, disabled_variables, stitch_kwargs=None):
         """Returns a BQM to the Job Shop Scheduling problem.
         Args:
             stitch_kwargs: A dict. Kwargs to be passed to dwavebinarycsp.stitch.
@@ -276,7 +283,8 @@ class JobShopScheduler:
         self._add_one_start_constraint()
         self._add_precedence_constraint()
         self._add_share_machine_constraint()
-        self._remove_absurd_times(disable_till, disabled_variables)
+        self._remove_absurd_times(
+            disable_till, disable_since, disabled_variables)
         # Get BQM
         bqm = dwavebinarycsp.stitch(self.csp, **stitch_kwargs)
 
