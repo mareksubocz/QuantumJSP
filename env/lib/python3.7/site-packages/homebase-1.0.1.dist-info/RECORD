@@ -1,0 +1,13 @@
+homebase-1.0.1.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+homebase-1.0.1.dist-info/METADATA,sha256=d8Z0T_fb0CvI0F7DMDR04quIhd8ncIsoEG_RoBZkJ0Q,3274
+homebase-1.0.1.dist-info/RECORD,,
+homebase-1.0.1.dist-info/WHEEL,sha256=gduuPyBvFJQSQ0zdyxF7k0zynDXbIbvg5ZBHoXum5uk,110
+homebase-1.0.1.dist-info/top_level.txt,sha256=niu8x8_zYfUA4-8NKHJ7h08HySzMjBMNfQXmUV4ALxs,14
+homebase/__init__.py,sha256=L8PptFiDXIC2Jk-KdISogUUAoS57sxH4qqBvP97ysuk,299
+homebase/__pycache__/__init__.cpython-37.pyc,,
+homebase/__pycache__/homebase.cpython-37.pyc,,
+homebase/homebase.py,sha256=eqZ05fX3q8B5buEEuI_TS3JnZDC4Sn2O6cjNRx3YJac,24531
+test/__init__.py,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+test/__pycache__/__init__.cpython-37.pyc,,
+test/__pycache__/test_homebase.cpython-37.pyc,,
+test/test_homebase.py,sha256=m8i3Zh8MkrEgkImc2suJ8vr7Z5rIcHlqa6OfoynM3SI,39584

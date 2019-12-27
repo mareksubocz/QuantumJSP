@@ -1,0 +1,3 @@
+[penaltymodel_factory]
+mip = penaltymodel.mip:get_penalty_model
+

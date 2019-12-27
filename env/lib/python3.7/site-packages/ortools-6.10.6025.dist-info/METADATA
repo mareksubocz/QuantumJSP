@@ -1,0 +1,52 @@
+Metadata-Version: 2.1
+Name: ortools
+Version: 6.10.6025
+Summary: Google OR-Tools python libraries and modules
+Home-page: https://developers.google.com/optimization/
+Author: Google Inc
+Author-email: lperron@google.com
+License: Apache 2.0
+Download-URL: https://github.com/google/or-tools/releases
+Keywords: operations research,constraint programming,linear programming,flow algorithms,python
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Office/Business :: Scheduling
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: protobuf (>=3.6.1)
+Requires-Dist: six (>=1.10)
+
+This project hosts operations research tools developed at Google and
+made available as open source under the Apache 2.0 License.
+
+The project contains several tools:
+
+- A Constraint Programming solver
+
+- A wrapper around third-party linear solvers:
+
+  - GLPK, CLP, CBC, SCIP, Sulum, and Gurobi
+
+- Knapsack algorithms
+
+- Graph algorithms:
+
+  - min-cost flow
+
+  - max flow
+
+  - linear sum assignment
+
+

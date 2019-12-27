@@ -1,0 +1,141 @@
+Metadata-Version: 2.1
+Name: dwave-hybrid
+Version: 0.4.1
+Summary: Hybrid Asynchronous Decomposition Solver Framework
+Home-page: https://github.com/dwavesystems/dwave-hybrid
+Author: D-Wave Systems Inc.
+Author-email: radomir@dwavesys.com
+License: Apache 2.0
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: six (>=1.10)
+Requires-Dist: numpy (<1.16.0,>=1.15.0)
+Requires-Dist: networkx
+Requires-Dist: click (>5)
+Requires-Dist: plucky (>=0.4.3)
+Requires-Dist: dimod (>=0.8.11)
+Requires-Dist: minorminer (>=0.1.7)
+Requires-Dist: dwave-networkx (>=0.6.6)
+Requires-Dist: dwave-system (>=0.7.6)
+Requires-Dist: dwave-neal (>=0.5.1)
+Requires-Dist: dwave-tabu (>=0.2.0)
+Requires-Dist: futures ; python_version == "2.7"
+Provides-Extra: test
+Requires-Dist: coverage ; extra == 'test'
+Requires-Dist: mock ; extra == 'test'
+
+.. image:: https://badge.fury.io/py/dwave-hybrid.svg
+    :target: https://badge.fury.io/py/dwave-hybrid
+    :alt: Last version on PyPI
+
+.. image:: https://circleci.com/gh/dwavesystems/dwave-hybrid.svg?style=svg
+    :target: https://circleci.com/gh/dwavesystems/dwave-hybrid
+    :alt: Linux/Mac build status
+
+.. image:: https://ci.appveyor.com/api/projects/status/porqyytww2elwjv8/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/dwave-adtt/dwave-hybrid/branch/master
+    :alt: Windows build status
+
+.. image:: https://img.shields.io/codecov/c/github/dwavesystems/dwave-hybrid/master.svg
+    :target: https://codecov.io/gh/dwavesystems/dwave-hybrid
+    :alt: Code coverage
+
+.. image:: https://readthedocs.com/projects/d-wave-systems-dwave-hybrid/badge/?version=latest
+    :target: https://docs.ocean.dwavesys.com/projects/hybrid/en/latest/
+    :alt: Documentation status
+
+.. image:: https://img.shields.io/pypi/pyversions/dwave-hybrid.svg?style=flat
+    :target: https://pypi.org/project/dwave-hybrid/
+    :alt: PyPI - Python Version
+
+
+=============
+D-Wave Hybrid
+=============
+
+.. index-start-marker
+
+A general, minimal Python framework for building hybrid asynchronous decomposition
+samplers for quadratic unconstrained binary optimization (QUBO) problems.
+
+*dwave-hybrid* facilitates three aspects of solution development:
+
+*   Hybrid approaches to combining quantum and classical compute resources
+*   Evaluating a portfolio of algorithmic components and problem-decomposition strategies
+*   Experimenting with workflow structures and parameters to obtain the best application results
+
+The framework enables rapid development and insight into expected performance
+of productized versions of its experimental prototypes.
+
+Your optimized algorithmic components and other contributions to this project are welcome!
+
+.. index-end-marker
+
+
+Installation or Building
+========================
+
+.. installation-start-marker
+
+Install from a package on PyPI::
+
+    pip install dwave-hybrid
+
+or from source::
+
+    git clone https://github.com/dwavesystems/dwave-hybrid.git
+    cd dwave-hybrid
+    pip install -r requirements.txt
+    python setup.py install
+
+.. installation-end-marker
+
+
+Example
+=======
+
+.. example-start-marker
+
+.. code-block:: python
+
+    import dimod
+    import hybrid
+
+    # Construct a problem
+    bqm = dimod.BinaryQuadraticModel({}, {'ab': 1, 'bc': -1, 'ca': 1}, 0, dimod.SPIN)
+
+    # Define the workflow
+    iteration = hybrid.RacingBranches(
+        hybrid.InterruptableTabuSampler(),
+        hybrid.EnergyImpactDecomposer(size=2)
+        | hybrid.QPUSubproblemAutoEmbeddingSampler()
+        | hybrid.SplatComposer()
+    ) | hybrid.ArgMin()
+    workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=3)
+
+    # Solve the problem
+    init_state = hybrid.State.from_problem(bqm)
+    final_state = workflow.run(init_state).result()
+
+    # Print results
+    print("Solution: sample={.samples.first}".format(final_state))
+
+
+.. example-end-marker
+
+
+License
+=======
+
+Released under the Apache License 2.0. See `<LICENSE>`_ file.
+
+

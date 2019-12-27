@@ -12,8 +12,11 @@ from instance_parser import find_time_window
 
 from pprint import pprint
 
+from copy import deepcopy
+
 
 def solve_with_pbruteforce(jobs, solution, max_time, window_size=10, qpu=False, num_reads=2000, chain_strength=2, times=1):
+    solutions = []
     for iteration_number in range(times):
         print(iteration_number)
         if qpu:
@@ -30,7 +33,7 @@ def solve_with_pbruteforce(jobs, solution, max_time, window_size=10, qpu=False, 
                 bqm = get_jss_bqm(new_jobs, window_size + 1, disable_till, disable_since,
                                   disabled_variables, stitch_kwargs={'min_classical_gap': 2})
             except ImpossibleBQM:
-                # print('*' * 25 + " It's impossible to construct a BQM " + '*' * 25)
+                print('*' * 25 + " It's impossible to construct a BQM " + '*' * 25)
                 continue
             if qpu:
                 sampleset = sampler.sample(
@@ -58,13 +61,16 @@ def solve_with_pbruteforce(jobs, solution, max_time, window_size=10, qpu=False, 
             for job, times in task_times.items():
                 for j in range(len(times)):
                     if solution[job][operations_indexes[job][j]] != task_times[job][j] + i:
-                        print(
-                            '!' * 30 + f'{job}: {operations_indexes[job][j]}')
+                        # print(
+                            # '!' * 30 + f'{job}: {operations_indexes[job][j]}')
                         changed = True
                         solution[job][operations_indexes[job]
                                       [j]] = task_times[job][j] + i
             if changed:
-                pprint(solution)
-        if not better:
-            break
-    return solution
+                # pprint(solution)
+                solutions.append(deepcopy(solution))
+        if not changed:
+            pass
+            # break
+    print("-" * 50)
+    return solution, solutions

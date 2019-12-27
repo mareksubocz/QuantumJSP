@@ -1,5 +1,3 @@
-from bisect import insort
-
 from collections import defaultdict
 
 from job_shop_scheduler import get_label, Task
@@ -17,10 +15,10 @@ def readInstance(path: str) -> dict:
         f.readline()
         for i, line in enumerate(f):
             lint = list(map(int, line.split()))
-            job_dict[i+1] = [x for x in
-                             zip(lint[::2],  # machines
-                                 lint[1::2]  # operation lengths
-                                 )]
+            job_dict[i + 1] = [x for x in
+                               zip(lint[::2],  # machines
+                                   lint[1::2]  # operation lengths
+                                   )]
         return job_dict
 
 
@@ -40,11 +38,11 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
     machine_dict = defaultdict(list)
     for key, value in solution.items():
         for i in range(len(value)):
-            machine_dict[jobs[key][i][0]].append((value[i], jobs[key][i][1]))
+            machine_dict[jobs[key][i][0]].append(
+                (key, value[i], jobs[key][i][1]))
     return machine_dict
 
 
-# FIXME: zmien sposob ograniczania startów operacji w tych samych jobach
 def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     new_jobs = defaultdict(list)
     operations_indexes = defaultdict(list)
@@ -65,18 +63,20 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
             elif (start <= start_time < end and end_time > end):
                 # an operation reaches out of the time window from right side
                 if i > 0:
-                    for x in range(start_time-jobs[job_name][i-1][1] + 1, end):
+                    for x in range(start_time - jobs[job_name][i - 1][1] + 1, end):
                         disabled_variables.append(get_label(Task(
-                            job_name, i-1, jobs[job_name][i-1][0], jobs[job_name][i-1][1]), x - start))
-                disable_since[machine] = min(disable_since[machine], start_time - start)
+                            job_name, i - 1, jobs[job_name][i - 1][0], jobs[job_name][i - 1][1]), x - start))
+                disable_since[machine] = min(
+                    disable_since[machine], start_time - start)
 
             elif start_time < start and start < end_time <= end:
                 # an operation reaches out of the time window from the left side
                 if i < len(start_times) - 1:
                     for x in range(end_time - start):
                         disabled_variables.append(get_label(Task(
-                            job_name, 0, jobs[job_name][i+1][0], jobs[job_name][i+1][1]), x))
-                disable_till[machine] = max(disable_till[machine], end_time - start)
+                            job_name, 0, jobs[job_name][i + 1][0], jobs[job_name][i + 1][1]), x))
+                disable_till[machine] = max(
+                    disable_till[machine], end_time - start)
 
             # If an operation reaches out of the time window from both sides,
             # do nothing, it's not going to be a problem
@@ -107,8 +107,9 @@ def solve_greedily(jobs: dict, max_time):
                     solution[name].append(space[0])
                     free_space[machine][j] = (space[0] + length, space[1])
                     break
-                elif i > 0 and space[1] - max(space[0], solution[name][i-1] + jobs[name][i-1][1]) >= length:
-                    startpoint = max(space[0], solution[name][i-1] + jobs[name][i-1][1])
+                elif i > 0 and space[1] - max(space[0], solution[name][i - 1] + jobs[name][i - 1][1]) >= length:
+                    startpoint = max(
+                        space[0], solution[name][i - 1] + jobs[name][i - 1][1])
                     solution[name].append(startpoint)
                     new_space_1 = (space[0], startpoint)
                     new_space_2 = (startpoint + length, space[1])
@@ -122,7 +123,7 @@ def solve_greedily(jobs: dict, max_time):
 def solve_worse(jobs: dict, max_time):
     free_space = {}
     solution = defaultdict(list)
-    for _, operations in jobs.items():
+    for operations in jobs.values():
         for machine, _ in operations:
             free_space[machine] = [(0, max_time)]
 
@@ -136,8 +137,9 @@ def solve_worse(jobs: dict, max_time):
                     solution[name].append(start)
                     free_space[machine][j] = (start + length, end)
                     break
-                elif i > 0 and end - max(start, solution[name][i-1] + jobs[name][i-1][1]) >= length:
-                    startpoint = max(start, solution[name][i-1] + jobs[name][i-1][1])
+                elif i > 0 and end - max(start, solution[name][i - 1] + jobs[name][i - 1][1]) >= length:
+                    startpoint = max(
+                        start, solution[name][i - 1] + jobs[name][i - 1][1])
                     solution[name].append(startpoint)
                     new_space_1 = (start, startpoint)
                     new_space_2 = (startpoint + length, end)
@@ -148,13 +150,32 @@ def solve_worse(jobs: dict, max_time):
     return solution
 
 
+def solve_with_order(jobs, order):
+    last_in_job = defaultdict(int)  # default jest 0
+    last_in_machine = defaultdict(int)
+    solution = defaultdict(list)
+    for key, index in order:
+        machine = jobs[key][index][0]
+        length = jobs[key][index][1]
+
+        start = max(last_in_job[key], last_in_machine[machine])
+
+        solution[key].append(start)
+        last_in_job[key] = last_in_machine[machine] = start + length
+    return solution
+
+
 def checkValidity(jobs: dict, solution: dict) -> bool:
-    # checking if every operation ends before next one starts
-    for key, value in solution.items():
-        for i, start_time in enumerate(value):
-            if i < len(value)-1 and start_time + jobs[key][i][1] > solution[key][i+1]:
-                return False
-    return True
+    order = get_order(solution)
+    solution_from_order = solve_with_order(jobs, order)
+    order2 = get_order(solution_from_order)
+
+    if order != order2:
+        pprint(order)
+        print('*' * 40)
+        pprint(order2)
+
+    return order == order2
 
 
 def get_result(jobs, solution):
@@ -162,3 +183,28 @@ def get_result(jobs, solution):
     for job, operations in jobs.items():
         max_time = max(max_time, solution[job][-1] + operations[-1][1])
     return max_time
+
+
+def get_order(solution):
+    order_dict = {}
+    order = []
+    for job, start_times in solution.items():
+        for i, start_time in enumerate(start_times):
+            order.append((start_time, (job, i)))
+        # order.extend([(value[x], (key, x)) for x in range(len(value))])
+    order.sort()
+    order = [x[1] for x in order]
+    return order
+
+
+def get_order_numbered(solution):
+    order_dict = {}
+    order = []
+    for i, (key, value) in enumerate(solution.items()):
+        # returning one number per operation
+        order.extend([(value[x], x * len(solution) + i + 1)
+                      for x in range(len(value))])
+
+    order.sort()
+    order = [x[1] for x in order]
+    return order

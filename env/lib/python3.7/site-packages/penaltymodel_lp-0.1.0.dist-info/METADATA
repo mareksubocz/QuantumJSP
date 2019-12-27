@@ -1,0 +1,72 @@
+Metadata-Version: 2.1
+Name: penaltymodel-lp
+Version: 0.1.0
+Summary: Generates penalty models using SciPy's linear programming.
+Home-page: https://github.com/dwavesystems/penaltymodel
+Author: D-Wave Systems Inc.
+Author-email: mwong@dwavesys.com
+License: Apache 2.0
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: >=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*
+Requires-Dist: dimod (<0.9.0,>=0.6.0)
+Requires-Dist: penaltymodel (<0.17.0,>=0.16.0)
+Requires-Dist: scipy (<2.0.0,>=0.15.0)
+Requires-Dist: numpy (<1.16.0,>=0.0.0)
+
+.. image:: https://img.shields.io/pypi/v/penaltymodel-lp.svg
+    :target: https://pypi.python.org/pypi/penaltymodel-lp
+
+Penalty Model - Linear Programming
+==================================================
+
+.. index-start-marker
+
+Generates penalty models using `scipy.optimize`_'s Linear Programming capability.
+Serves as a factory and cache for penaltymodel.
+
+On install, penaltymodel-lp registers an entry point that can be read by
+penaltymodel. It will be used automatically by any project that uses penaltymodel's
+:code:`get_penalty_model` function.
+
+.. _scipy.optimize: https://docs.scipy.org/doc/scipy/reference/optimize.html
+
+.. index-end-marker
+
+Installation
+------------
+
+.. installation-start-marker
+
+To install:
+
+.. code-block:: bash
+
+    pip install penaltymodel-lp
+
+To build from souce:
+
+.. code-block:: bash
+
+    cd penaltymodel_lp
+    pip install -r requirements.txt
+    python setup.py install
+
+.. installation-end-marker
+
+
+License
+-------
+
+Released under the Apache License 2.0
+
+

@@ -1,0 +1,74 @@
+Metadata-Version: 2.1
+Name: dwave-ocean-sdk
+Version: 1.5.0
+Summary: Software development kit for open source D-Wave tools
+Home-page: https://github.com/dwavesystems/dwave-ocean-sdk
+Author: D-Wave Systems Inc.
+Author-email: tools@dwavesys.com
+License: Apache 2.0
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: >=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*
+Requires-Dist: dwave-networkx (<0.9.0,>=0.8.0)
+Requires-Dist: dwave-system (<0.9.0,>=0.8.0)
+Requires-Dist: dwave-qbsolv (<0.3.0,>=0.2.7)
+Requires-Dist: dwave-hybrid (<0.5.0,>=0.4.0)
+Requires-Dist: dwave-neal (<0.6.0,>=0.5.0)
+Requires-Dist: dwave-tabu (<0.3.0,>=0.2.0)
+Requires-Dist: dimod (<0.9.0,>=0.8.0)
+Requires-Dist: numpy (<1.16.0)
+Requires-Dist: pyqubo (>=0.3.0)
+Requires-Dist: dwavebinarycsp[mip] (<0.1.0,>=0.0.9) ; (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64") and python_version != "3.4"
+Requires-Dist: dwavebinarycsp[maxgap] (<0.1.0,>=0.0.9) ; platform_machine != "x86_64" and platform_machine != "amd64" and platform_machine != "AMD64" or python_version == "3.4"
+
+.. image:: https://img.shields.io/pypi/v/dwave-ocean-sdk.svg
+    :target: https://pypi.python.org/pypi/dwave-ocean-sdk
+
+.. image:: https://ci.appveyor.com/api/projects/status/c8ofdgyiy4w38lu3?svg=true
+    :target: https://ci.appveyor.com/project/dwave-adtt/dwave-ocean-sdk
+
+.. image:: https://circleci.com/gh/dwavesystems/dwave-ocean-sdk.svg?style=svg
+    :target: https://circleci.com/gh/dwavesystems/dwave-ocean-sdk
+
+.. index-start-marker
+
+dwave-ocean-sdk
+===============
+
+Installer for D-Wave's Ocean Tools.
+
+
+Installation
+------------
+
+.. installation-start-marker
+
+Compatible with Python 2 and 3:
+
+.. code-block:: bash
+
+    pip install dwave-ocean-sdk
+
+To install from source:
+
+.. code-block:: bash
+
+    python setup.py install
+
+.. installation-end-marker
+
+Next Steps
+----------
+
+For information on configuring solvers and using the Ocean tools, see
+the `Ocean Documentation <https://docs.ocean.dwavesys.com/en/latest/>`_\ .
+
+

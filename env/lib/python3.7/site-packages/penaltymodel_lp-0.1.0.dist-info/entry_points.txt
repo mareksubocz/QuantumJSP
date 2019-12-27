@@ -1,0 +1,3 @@
+[penaltymodel_factory]
+lp = penaltymodel.lp:get_penalty_model
+
