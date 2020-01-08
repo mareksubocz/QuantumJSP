@@ -95,7 +95,7 @@ def num_of_errors_in_times(qpu=False):
         margins.append([abs(values[0] - median(values)),
                         abs(values[-1] - median(values))])
     plt.errorbar(errors.keys(), medians, yerr=np.array(
-        margins).T, fmt='ko', color='b')
+        margins).T, fmt='o', color='blue')
     plt.xlabel('max_time value')
     plt.ylabel('number of error solutions provided (out of 1000)')
     # plt.show()
@@ -104,15 +104,15 @@ def num_of_errors_in_times(qpu=False):
 
 
 def num_of_errors_in_chain_strengths(qpu=False):
-    jobs = {"1": [(0, 2), (1, 1), (0, 1), (3, 2)],
-            "2": [(1, 1), (0, 1), (2, 2), (2, 2)],
-            "3": [(2, 1), (2, 1), (1, 1), (1, 3)]}
+    jobs = {"1": [(0, 2), (1, 1), (2, 1)],
+            "2": [(1, 1), (0, 1), (3, 2)],
+            "3": [(2, 1), (3, 1), (1, 1)]}
 
-    strengths = (0.5, 1, 1.25, 1.5, 1.6, 1.7, 1.8, 1.9,
-                 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 3.0, 3.5, 4.0)
+    strengths = (0.5, 1, 1.5, 1.8, 2.0, 2.1, 2.3, 2.5, 3.0, 3.5, 4.0)
     errors = defaultdict(list)
     for strength in strengths:
         for i in range(12):
+            print("tick " + str(strength) + " " + str(i))
             try:
                 bqm = get_jss_bqm(jobs, 8, stitch_kwargs={
                     'min_classical_gap': 2.0})
@@ -126,8 +126,9 @@ def num_of_errors_in_chain_strengths(qpu=False):
                     sampleset = sampler.sample(bqm, num_reads=1000)
                 sol_dict = printResults(sampleset, jobs)
                 errors[strength].append(sol_dict['error'])
-            except:
+            except Exception as e:
                 print(f"error: {strength}")
+                print(e)
                 continue
     medians = []
     margins = []
@@ -138,7 +139,7 @@ def num_of_errors_in_chain_strengths(qpu=False):
         margins.append([abs(values[0] - median(values)),
                         abs(values[-1] - median(values))])
     plt.errorbar(errors.keys(), medians, yerr=np.array(
-        margins).T, fmt='ko', color='b')
+        margins).T, fmt='o-', color='blue')
     plt.xlabel('chain strength')
     plt.ylabel('number of error solutions provided (out of 1000)')
     # plt.show()
@@ -146,7 +147,7 @@ def num_of_errors_in_chain_strengths(qpu=False):
     print(errors)
 
 
-def num_of_errors_in_length(qpu=False):
+def num_of_errors_in_length(qpu=True):
     jobs3 = {"1": [(0, 2), (1, 1), (0, 1)],
              "2": [(1, 1), (0, 1), (2, 2)],
              "3": [(2, 1), (2, 1), (1, 1)]}
@@ -165,5 +166,5 @@ def num_of_errors_in_length(qpu=False):
 
 
 if __name__ == "__main__":
-    # num_of_errors_in_times(qpu=False)
-    num_of_errors_in_chain_strengths(qpu=False)
+    # num_of_errors_in_times(qpu=True)
+    num_of_errors_in_chain_strengths(qpu=True)

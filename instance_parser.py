@@ -208,3 +208,12 @@ def get_order_numbered(solution):
     order.sort()
     order = [x[1] for x in order]
     return order
+
+
+if __name__ == "__main__":
+    jobs = readInstance("data/ft06.txt")
+    for i in range(10000):
+        solution = solve_greedily(jobs, 100)
+        result = get_result(jobs, solution)
+        if result < 59:
+            print(result)
