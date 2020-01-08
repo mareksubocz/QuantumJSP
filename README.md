@@ -1,4 +1,4 @@
-# Quantum-Based Job Shop Scheduling
+# Quantum-Based Job Shop Scheduling Problem
 
 A heuristic approach on how to optimally schedule jobs using a quantum computer.
 
