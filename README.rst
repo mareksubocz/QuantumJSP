@@ -1,8 +1,9 @@
 Quantum-Based Job Shop Scheduling
 ========================
 To execute the code, run:
+
 python3 demo.py data_file.txt
-========================
+
 A heuristic approach on how to optimally schedule jobs using a quantum computer.
 
 Given a set of jobs and a finite number of machines, how should we schedule
