@@ -1,3 +1,4 @@
+from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatch
 from instance_parser import transformToMachineDict, get_result
@@ -35,9 +36,11 @@ def draw_solution(jobs, solution, folder):
     ax.tick_params(left=False)
     ax.set_ylabel('Machines')
     ax.set_xlabel('Time')
-    number = len(glob.glob('./img/' + folder + '/*'))
-    plt.savefig('./img/' + folder + '/' + '0' *
-                (4 - len(str(number))) + str(number) + '_' + str(get_result(jobs, solution)))
+    folder_path = './img/' + folder
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
+    number = len(glob.glob(folder_path + '/*'))
+    plt.savefig(folder_path + '/' + '0' * (4 - len(str(number))) + str(number)
+                + '_' + str(get_result(jobs, solution)))
     plt.close()
 
 

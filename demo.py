@@ -54,7 +54,7 @@ for j in [5]:
                 order_s = get_order(s)
                 s_origin = solve_with_order(jobs2, order_s)
                 if s_origin != s_origin_prev:
-                    draw_solution(jobs2, s_origin, 'solrandom')
+                    draw_solution(jobs2, s_origin, 'rysunki')
                     s_origin_prev = s_origin
                     print('Dodano rysunek')
         except:
