@@ -19,7 +19,7 @@ python3 demo.py input_file.txt
 <img src="img/solutions5_2_cropped.gif"/>
 
 ## References
-D. Venturelli, D. Marchand, and G. Rojo, "Quantum Annealing Implementation of Job-Shop Scheduling", arXiv:1506.08479v2
+D. Venturelli, D. Marchand, and G. Rojo, "Quantum Annealing Implementation of Job-Shop Scheduling", https://arxiv.org/abs/1506.08479v2
 
 D-wave's Quantum Computer JSP Demo:
 https://github.com/dwave-examples/job-shop-scheduling/tree/104b3206f9c650b28383ffb571a8d677c9a81549
