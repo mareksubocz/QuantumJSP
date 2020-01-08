@@ -8,6 +8,16 @@ This question is the job shop scheduling problem!
 
 ## Running the tests
 
+### Installing libraries and dependencies
+To run the script, you have to install required python libraries:
+
+https://docs.ocean.dwavesys.com/en/latest/overview/install.html
+
+To do that on D-wave's Quantum Computer rather than it's simulation,
+you also need to create an account and configure a solver:
+
+https://docs.ocean.dwavesys.com/en/latest/overview/dwavesys.html#dwavesys
+
 ### Simple execution on a chosen dataset
 
 ```
