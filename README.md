@@ -1,4 +1,4 @@
-# Quantum-Based Job Shop Scheduling
+# Quantum-Based Job Shop Scheduling Problem
 
 A heuristic approach on how to optimally schedule jobs using a quantum computer.
 
@@ -30,6 +30,3 @@ python3 demo.py input_file.txt
 
 ## References
 D. Venturelli, D. Marchand, and G. Rojo, "Quantum Annealing Implementation of Job-Shop Scheduling", https://arxiv.org/abs/1506.08479v2
-
-D-wave's Quantum Computer JSP Demo:
-https://github.com/dwave-examples/job-shop-scheduling/tree/104b3206f9c650b28383ffb571a8d677c9a81549
