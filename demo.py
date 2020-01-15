@@ -12,5 +12,7 @@ from charts import partial_bruteforce_visualisation
 filterwarnings("ignore")
 
 # jobs_full_len = readInstance("data/ft06.txt")
-jobs_full_len = readInstance(sys.argv[1])
-partial_bruteforce_visualisation("nowe", jobs_full_len)
+jobs = readInstance("data/ft06.txt")
+initial_solution = solve_greedily(jobs)
+for current_result, _ in solve_with_pbruteforce(jobs, initial_solution):
+    print(f"Current_result: {current_result}")

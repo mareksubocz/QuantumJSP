@@ -14,7 +14,7 @@ from instance_parser import *
 from utilities import *
 from partial_brute_force import solve_with_pbruteforce
 
-from copy import deepcopy
+from copy import deepcopy, copy
 from collections import defaultdict
 from pprint import pprint
 from statistics import median
@@ -167,6 +167,19 @@ def num_of_errors_in_length(qpu=True):
              "3": [(2, 1), (2, 1), (1, 1)]}
 
 
+def frequencies():
+    jobs = readInstance("data/ft06.txt")
+    results = defaultdict(int)
+    ilosc = 10000
+    for i in range(ilosc):
+        results[get_result(jobs, solve_greedily(jobs, 75))] += 1
+    pprint(results)
+    plt.bar(list(results.keys()), list(results.values()), align='center')
+    plt.ylabel(f'Number of occurrences (out of {ilosc})')
+    plt.xlabel('Makespan')
+    plt.show()
+
+
 def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=70, num_of_times=10, qpu=False):
     if jobs_full_len is None:
         jobs_full_len = readInstance("data/ft06.txt")
@@ -177,7 +190,8 @@ def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=7
         print(
             f"Wynik po rozw. zachłannym: {get_result(jobs_full_len, solution)}")
         print(f"Zaczynamy dla okna o szerokości {j}.")
-        for result_checkpoint in solve_with_pbruteforce(
+        next_result_checkpoint = solution
+        for result_checkpoint, line_tick in solve_with_pbruteforce(
                 jobs_squashed_len,
                 solution,
                 get_result(jobs_squashed_len, solution) + 1,
@@ -186,12 +200,17 @@ def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=7
                 num_reads=5000,
                 chain_strength=2,
                 times=num_of_times):
-            draw_solution(jobs_squashed_len, result_checkpoint, folder_name)
+            draw_solution(jobs_squashed_len, next_result_checkpoint,
+                          folder_name, [line_tick, line_tick + j])
+            draw_solution(jobs_squashed_len, result_checkpoint,
+                          folder_name, [line_tick, line_tick + j])
+            next_result_checkpoint = deepcopy(result_checkpoint)
         final_result = result_checkpoint
         print(f"końcowy rezultat: {get_result(jobs_full_len, final_result)}")
 
 
 if __name__ == "__main__":
     # num_of_errors_in_times(qpu=True)
-    partial_bruteforce_visualisation("kolorowe_krotkie_poprawione")
+    # partial_bruteforce_visualisation("kolorowe_krotkie_poprawione")
     # num_of_errors_in_chain_strengths(qpu=True)
+    frequencies()

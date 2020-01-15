@@ -1,30 +1,16 @@
-from __future__ import print_function
-
-import matplotlib.pyplot as plt
-import time
-import neal
-
-from dwave.system.composites import EmbeddingComposite
-from dwave.system.samplers import DWaveSampler
-
-from job_shop_scheduler import get_jss_bqm
-
-from instance_parser import readInstance, transformToMachineDict, find_time_window, solve_greedily
-
-from collections import defaultdict
-
-from pprint import pprint
-
+from instance_parser import readInstance, solve_worse, solve_greedily
+from instance_parser import get_result, checkValidity, get_order, solve_with_order, squash_lengths
+from partial_brute_force import solve_with_pbruteforce
 from utilities import draw_solution
+from pprint import pprint
+from collections import defaultdict
+from copy import deepcopy
+import sys
+from warnings import filterwarnings
+from charts import partial_bruteforce_visualisation
 
-jobs = {1: [(2, 1), (0, 1), (1, 2), (3, 3), (5, 1), (4, 2)],
-        2: [(1, 3), (2, 2), (4, 3), (5, 3), (0, 3), (3, 2)],
-        3: [(2, 2), (3, 2), (5, 3), (0, 3), (1, 1), (4, 3)],
-        4: [(1, 2), (0, 2), (2, 2), (3, 1), (4, 3), (5, 3)],
-        5: [(2, 3), (1, 1), (4, 2), (5, 2), (0, 1), (3, 1)],
-        6: [(1, 1), (3, 1), (5, 3), (0, 3), (4, 2), (2, 1)]}
+filterwarnings("ignore")
 
-solutions = []
-
-for solution in solutions:
-    draw_solution(jobs, solution)
+# jobs_full_len = readInstance("data/ft06.txt")
+jobs_full_len = readInstance(sys.argv[1])
+partial_bruteforce_visualisation("ramki_poprawione", jobs_full_len)

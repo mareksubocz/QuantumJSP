@@ -35,7 +35,7 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
          "job_2": [start_time_of_operation_1, start_time of operation_2]}
 
     Returns:
-        dict: [description]
+        dict: #TODO:[description]
     """
     machine_dict = defaultdict(list)
     for key, value in solution.items():
@@ -86,7 +86,11 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     return new_jobs, operations_indexes, disable_till, disable_since, disabled_variables
 
 
-def solve_greedily(jobs: dict, max_time):
+def solve_greedily(jobs: dict):
+    max_time = 0
+    for job in jobs.values():
+        max_time += sum(a[1] for a in job)
+
     free_space = {}
     solution = defaultdict(list)
     max_num_of_operations = 0
@@ -168,6 +172,7 @@ def solve_with_order(jobs, order):
 
 
 def checkValidity(jobs: dict, solution: dict) -> bool:
+    # FIXME:Not working properly
     order = get_order(solution)
     solution_from_order = solve_with_order(jobs, order)
     order2 = get_order(solution_from_order)

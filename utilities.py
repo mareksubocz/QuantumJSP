@@ -5,10 +5,11 @@ from instance_parser import transformToMachineDict, get_result
 import glob
 
 colors = ['red', 'green', 'yellow', 'blue', 'violet', 'orange']
-colorsHEX = ['#FF3333', '#79D279', '#FFFF66', '#80B3FF', '#C299FF', '#FFDAB3']
+# colorsHEX = ['#FF3333', '#79D279', '#FFFF66', '#80B3FF', '#C299FF', '#FFDAB3']
+colorsHEX = ['blue', 'blue', 'blue', 'blue', 'blue', 'blue']
 
 
-def draw_solution(jobs, solution, folder):
+def draw_solution(jobs, solution, folder=None, lines=[0, 0]):
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.set_aspect(aspect=1.5)
     rectangles = []
@@ -18,7 +19,7 @@ def draw_solution(jobs, solution, folder):
             # plt.gca().add_patch(plt.Rectangle(
                 # (operation[1], machine), operation[2] - 0.1, 0.9, name="cos"))
             rectangles.append((str(operation[0]), mpatch.Rectangle(
-                (operation[1], machine + 0.5), operation[2] - 0.1, 0.9, color=colorsHEX[machine]), ))
+                (operation[1], machine + 0.5), operation[2] - 0.2, 0.9, color=colorsHEX[machine]), ))
 
     for r in rectangles:
         ax.add_artist(r[1])
@@ -29,6 +30,10 @@ def draw_solution(jobs, solution, folder):
         ax.annotate(r[0], (cx, cy), color='black', weight='bold',
                     fontsize=8, ha='center', va='center')
 
+    # rysowanie barier ramki
+    for line in lines:
+        plt.axvline(x=line, color='red', linewidth=1, linestyle='--')
+
     # ax.set_xlim((0, get_result(jobs, solution) + 1))
     ax.set_xlim(0, 65)
     ax.set_ylim((0, len(jobs) + 1))
@@ -38,11 +43,14 @@ def draw_solution(jobs, solution, folder):
     ax.tick_params(left=False)
     ax.set_ylabel('Machines')
     ax.set_xlabel('Time')
-    folder_path = './img/' + folder
-    Path(folder_path).mkdir(parents=True, exist_ok=True)
-    number = len(glob.glob(folder_path + '/*'))
-    plt.savefig(folder_path + '/' + '0' * (4 - len(str(number))) + str(number)
-                + '_' + str(get_result(jobs, solution)))
+    if folder is None:
+        plt.show()
+    else:
+        folder_path = './img/gantt/' + folder
+        Path(folder_path).mkdir(parents=True, exist_ok=True)
+        number = len(glob.glob(folder_path + '/*'))
+        plt.savefig(folder_path + '/' + '0' * (4 - len(str(number))) + str(number)
+                    + '_' + str(get_result(jobs, solution)))
     plt.close()
 
 
@@ -61,4 +69,4 @@ if __name__ == "__main__":
                 5: [3, 9, 10, 12, 16, 17],
                 6: [0, 1, 2, 5, 8, 10]}
 
-    draw_solution(jobs, solution)
+    draw_solution(jobs, solution, lines=[10, 15])

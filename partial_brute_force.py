@@ -15,7 +15,9 @@ from pprint import pprint
 from copy import deepcopy
 
 
-def solve_with_pbruteforce(jobs, solution, max_time, window_size=10, qpu=False, num_reads=2000, chain_strength=2, times=1):
+def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=None, window_size=5, chain_strength=2, times=10):
+    if max_time is None:
+        max_time = get_result(jobs, solution) + 3
     for iteration_number in range(times):
         print(iteration_number)
         try:
@@ -57,15 +59,15 @@ def solve_with_pbruteforce(jobs, solution, max_time, window_size=10, qpu=False, 
                     task_times[int(job_name)][task_index] = start_time
 
                 # improving original solution
+                sol_found = deepcopy(solution)
                 for job, times in task_times.items():
                     for j in range(len(times)):
-                        if solution[job][indexes[job][j]] != task_times[job][j] + i:
-                            sol_found = deepcopy(solution)
+                        if sol_found[job][indexes[job][j]] != task_times[job][j] + i:
                             sol_found[job][indexes[job][j]
                                            ] = task_times[job][j] + i
-                            if True:  # FIXME: checkValidity(jobs, sol_found):
-                                solution = sol_found
-                                yield solution
+                if True:  # FIXME: checkValidity(jobs, sol_found):
+                    solution = sol_found
+                    yield solution, i  # rozwiązanie i miejsce ramki
         except Exception as e:
             print(e)
             continue
