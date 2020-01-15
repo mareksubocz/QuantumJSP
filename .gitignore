@@ -8,6 +8,8 @@ test.py
 
 env/
 
+img/gantt/
+
 .DS_Store
 
 *.pyc
