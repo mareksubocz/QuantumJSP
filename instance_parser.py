@@ -8,6 +8,8 @@ from random import shuffle
 
 from math import inf
 
+from copy import deepcopy
+
 
 def readInstance(path: str) -> dict:
     job_dict = defaultdict(list)
@@ -170,10 +172,10 @@ def checkValidity(jobs: dict, solution: dict) -> bool:
     solution_from_order = solve_with_order(jobs, order)
     order2 = get_order(solution_from_order)
 
-    if order != order2:
-        pprint(order)
-        print('*' * 40)
-        pprint(order2)
+    # if order != order2:
+    #     pprint(order)
+    #     print('*' * 40)
+    #     pprint(order2)
 
     return order == order2
 
@@ -208,6 +210,30 @@ def get_order_numbered(solution):
     order.sort()
     order = [x[1] for x in order]
     return order
+
+
+def squash_lengths(instance, steps=[4, 7]):
+    """Returns an instance with the same operations, but with
+    squashed lengths to [1,2,3,..., len(steps)+1]
+
+    Args:
+        instance (dict): instance to be squashed
+        steps (list, optional): lengths at which operations
+        are qualified to a longer length. Defaults to [4, 7].
+    """
+
+    steps.sort()
+    steps.append(float('inf'))
+
+    result = deepcopy(instance)
+
+    for operations in result.values():
+        for j, operation in enumerate(operations):
+            for i, step in enumerate(steps, start=1):
+                if operation[1] < step:
+                    operations[j] = (operation[0], i)
+                    break
+    return result
 
 
 if __name__ == "__main__":

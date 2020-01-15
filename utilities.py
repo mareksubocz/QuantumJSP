@@ -2,8 +2,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatch
 from instance_parser import transformToMachineDict, get_result
-from pprint import pprint
 import glob
+
+colors = ['red', 'green', 'yellow', 'blue', 'violet', 'orange']
+colorsHEX = ['#FF3333', '#79D279', '#FFFF66', '#80B3FF', '#C299FF', '#FFDAB3']
 
 
 def draw_solution(jobs, solution, folder):
@@ -16,7 +18,7 @@ def draw_solution(jobs, solution, folder):
             # plt.gca().add_patch(plt.Rectangle(
                 # (operation[1], machine), operation[2] - 0.1, 0.9, name="cos"))
             rectangles.append((str(operation[0]), mpatch.Rectangle(
-                (operation[1], machine + 0.5), operation[2] - 0.1, 0.9)))
+                (operation[1], machine + 0.5), operation[2] - 0.1, 0.9, color=colorsHEX[machine]), ))
 
     for r in rectangles:
         ax.add_artist(r[1])
@@ -24,7 +26,7 @@ def draw_solution(jobs, solution, folder):
         cx = rx + r[1].get_width() / 2.0
         cy = ry + r[1].get_height() / 2.0
 
-        ax.annotate(r[0], (cx, cy), color='w', weight='bold',
+        ax.annotate(r[0], (cx, cy), color='black', weight='bold',
                     fontsize=8, ha='center', va='center')
 
     # ax.set_xlim((0, get_result(jobs, solution) + 1))
