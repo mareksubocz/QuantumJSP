@@ -13,3 +13,5 @@ img/gantt/
 .DS_Store
 
 *.pyc
+
+test*.py
