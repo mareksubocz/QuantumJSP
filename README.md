@@ -6,8 +6,8 @@ A heuristic approach on how to optimally schedule jobs using a quantum computer.
 * [About the Project](#about-the-project)
 * [Getting started](#getting-started)
   * [Prerequisites](#prerequisites)
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
-* [Running the tests](#running-the-tests)
 * [References](#references)
 
 ## About The Project
@@ -32,9 +32,10 @@ https://docs.ocean.dwavesys.com/en/latest/overview/install.html
 
 
 ### Installation
+**NOTE:** If you are okay with using a simulator instead of a real QPU, jump to part 3.
 1. Get free API Key at https://www.dwavesys.com/take-leap
 2. Configure a solver at https://docs.ocean.dwavesys.com/en/latest/overview/dwavesys.html#dwavesys
-2. Clone the repo
+3. Clone the repo
 
 ```
 git clone https://github.com/mareksubocz/QuantumJSP
