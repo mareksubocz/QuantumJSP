@@ -15,7 +15,7 @@ from pprint import pprint
 from copy import deepcopy
 
 
-def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=None, window_size=5, chain_strength=2, times=10):
+def brute_force_greedy(jobs, solution, qpu=False, num_reads=2000, max_time=None, window_size=5, chain_strength=2, times=10):
     if max_time is None:
         max_time = get_result(jobs, solution) + 3
     for iteration_number in range(times):
@@ -34,29 +34,7 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                 if not bool(new_jobs):  # if new_jobs dict is empty
                     continue
 
-                try:
-                    bqm = get_jss_bqm(new_jobs, window_size + 1, disable_till, disable_since,
-                                      disabled_variables, stitch_kwargs={'min_classical_gap': 2})
-                except ImpossibleBQM:
-                    print('*' * 25 + " It's impossible to construct a BQM " + '*' * 25)
-                    continue
-
-                if qpu:
-                    sampleset = sampler.sample(
-                        bqm, chain_strength=chain_strength, num_reads=num_reads)
-                else:
-                    sampleset = sampler.sample(bqm, num_reads=num_reads)
-
-                solution1 = sampleset.first.sample
-                selected_nodes = [k for k, v in solution1.items() if v ==
-                                  1 and not k.startswith('aux')]
-                # Parse node information
-                task_times = {k: [-1] * len(v) for k, v in new_jobs.items()}
-                for node in selected_nodes:
-                    job_name, task_time = node.rsplit("_", 1)
-                    task_index, start_time = map(int, task_time.split(","))
-
-                    task_times[int(job_name)][task_index] = start_time
+                task_times = solve_greedily(new_jobs)
 
                 # improving original solution
                 sol_found = deepcopy(solution)
@@ -69,6 +47,5 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                     solution = sol_found
                     yield solution, i  # rozwiązanie i miejsce ramki
         except Exception as e:
-            yield 'ex', 'ex'
             print(e)
             continue

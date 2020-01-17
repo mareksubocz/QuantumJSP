@@ -172,7 +172,7 @@ def frequencies():
     results = defaultdict(int)
     ilosc = 10000
     for i in range(ilosc):
-        results[get_result(jobs, solve_greedily(jobs, 75))] += 1
+        results[get_result(jobs, solve_greedily(jobs))] += 1
     pprint(results)
     plt.bar(list(results.keys()), list(results.values()), align='center')
     plt.ylabel(f'Number of occurrences (out of {ilosc})')
