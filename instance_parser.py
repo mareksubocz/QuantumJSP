@@ -167,7 +167,8 @@ def solve_with_order(jobs, order):
         start = max(last_in_job[key], last_in_machine[machine])
 
         solution[key].append(start)
-        last_in_job[key] = last_in_machine[machine] = start + length
+        last_in_job[key] = start + length
+        last_in_machine[machine] = start + length
     return solution
 
 
@@ -193,19 +194,17 @@ def get_result(jobs, solution):
 
 
 def get_order(solution):
-    order_dict = {}
     order = []
     for job, start_times in solution.items():
         for i, start_time in enumerate(start_times):
             order.append((start_time, (job, i)))
         # order.extend([(value[x], (key, x)) for x in range(len(value))])
     order.sort()
-    order = [x[1] for x in order]
-    return order
+    res = [x[1] for x in order]
+    return res
 
 
 def get_order_numbered(solution):
-    order_dict = {}
     order = []
     for i, (key, value) in enumerate(solution.items()):
         # returning one number per operation

@@ -62,9 +62,8 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                 sol_found = deepcopy(solution)
                 for job, times in task_times.items():
                     for j in range(len(times)):
-                        if sol_found[job][indexes[job][j]] != task_times[job][j] + i:
-                            sol_found[job][indexes[job][j]
-                                           ] = task_times[job][j] + i
+                        sol_found[job][indexes[job][j]
+                                       ] = task_times[job][j] + i
                 if True:  # FIXME: checkValidity(jobs, sol_found):
                     solution = sol_found
                     yield solution, i  # rozwiązanie i miejsce ramki

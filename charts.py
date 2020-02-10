@@ -186,7 +186,7 @@ def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=7
 
     jobs_squashed_len = squash_lengths(jobs_full_len)
     for j in [5]:
-        solution = solve_greedily(jobs_full_len, max_time)
+        solution = solve_greedily(jobs_full_len)
         print(
             f"Wynik po rozw. zachłannym: {get_result(jobs_full_len, solution)}")
         print(f"Zaczynamy dla okna o szerokości {j}.")
@@ -194,7 +194,7 @@ def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=7
         for result_checkpoint, line_tick in solve_with_pbruteforce(
                 jobs_squashed_len,
                 solution,
-                get_result(jobs_squashed_len, solution) + 1,
+                max_time=get_result(jobs_squashed_len, solution) + 1,
                 qpu=qpu,
                 window_size=j,
                 num_reads=5000,
@@ -204,6 +204,13 @@ def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=7
                           folder_name, [line_tick, line_tick + j])
             draw_solution(jobs_squashed_len, result_checkpoint,
                           folder_name, [line_tick, line_tick + j])
+
+            order_full = get_order(result_checkpoint)
+            full_result_checkpoint = solve_with_order(
+                jobs_full_len, order_full)
+            draw_solution(jobs_full_len, full_result_checkpoint,
+                          folder_name, [], full=True)
+
             next_result_checkpoint = deepcopy(result_checkpoint)
         final_result = result_checkpoint
         print(f"końcowy rezultat: {get_result(jobs_full_len, final_result)}")
@@ -211,6 +218,6 @@ def partial_bruteforce_visualisation(folder_name, jobs_full_len=None, max_time=7
 
 if __name__ == "__main__":
     # num_of_errors_in_times(qpu=True)
-    # partial_bruteforce_visualisation("kolorowe_krotkie_poprawione")
+    partial_bruteforce_visualisation("kolorowe_krotkie_poprawione3")
     # num_of_errors_in_chain_strengths(qpu=True)
-    frequencies()
+    # frequencies()
