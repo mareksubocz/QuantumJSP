@@ -10,5 +10,4 @@ squashed_jobs = squash_lengths(jobs)
 initial_solution = solve_greedily(jobs)
 
 for current_result, _ in solve_with_pbruteforce(squashed_jobs, initial_solution):
-    print(
-        f"Current_result: {get_result(squashed_jobs, current_result)}")
+    print(f"Current_result: {get_result(squashed_jobs, current_result)}")

@@ -1,14 +1,9 @@
 from collections import defaultdict
-
-from job_shop_scheduler import get_label, Task
-
-from pprint import pprint
-
-from random import shuffle
-
-from math import inf
-
 from copy import deepcopy
+from job_shop_scheduler import get_label, Task
+from math import inf
+from pprint import pprint
+from random import shuffle
 
 
 def readInstance(path: str) -> dict:

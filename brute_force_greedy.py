@@ -1,17 +1,5 @@
-from __future__ import print_function
-
-import neal
-
-from dwave.system.composites import EmbeddingComposite
-from dwave.system.samplers import DWaveSampler
-from dwavebinarycsp.exceptions import ImpossibleBQM
-
-from job_shop_scheduler import get_jss_bqm
-
+# from __future__ import print_function
 from instance_parser import *
-
-from pprint import pprint
-
 from copy import deepcopy
 
 

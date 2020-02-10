@@ -1,5 +1,4 @@
-from __future__ import print_function
-
+# from __future__ import print_function
 import matplotlib.pyplot as plt
 import time
 import neal
@@ -14,11 +13,10 @@ from instance_parser import *
 from utilities import *
 from partial_brute_force import solve_with_pbruteforce
 
-from copy import deepcopy, copy
+from copy import deepcopy
 from collections import defaultdict
 from pprint import pprint
 from statistics import median
-from warnings import filterwarnings
 
 
 def printResults(sampleset, jobs):
