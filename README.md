@@ -13,6 +13,8 @@ A heuristic approach on how to optimally schedule jobs using a quantum computer.
 ## About The Project
 <img src="img/solutions5_2_cropped.gif"/>
 
+Note: Numbers in bars represent jobs
+
 Given a set of jobs and a finite number of machines, how should we schedule our jobs
 on those machines such that all our jobs are completed at the earliest possible time?
 This question is the job shop scheduling problem!
