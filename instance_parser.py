@@ -184,7 +184,7 @@ def checkValidity(jobs: dict, solution: dict) -> bool:
 def get_result(jobs, solution):
     max_time = 0
     for job, operations in jobs.items():
-        max_time = max(max_time, solution[job][-1] + operations[-1][1])
+        max_time = max(max_time, solution[job][-1] + int(operations[-1][1]))
     return max_time
 
 

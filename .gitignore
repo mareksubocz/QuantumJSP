@@ -15,3 +15,7 @@ img/gantt/
 *.pyc
 
 test*.py
+
+ocean/
+
+.history/
