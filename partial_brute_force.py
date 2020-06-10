@@ -66,8 +66,9 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                                        ] = task_times[job][j] + i
                 if True:  # FIXME: checkValidity(jobs, sol_found):
                     solution = sol_found
-                    yield solution, i  # rozwiązanie i miejsce ramki
+                    yield solution, i  # solution and place in frame
         except Exception as e:
-            yield 'ex', 'ex'
+            # uncomment this if you want to apply some behaviuor when exception occurs
+            # yield 'ex', 'ex'
             print(e)
             continue

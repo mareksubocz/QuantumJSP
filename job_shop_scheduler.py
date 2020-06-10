@@ -2,7 +2,6 @@ from __future__ import print_function
 
 from bisect import bisect_right
 from os import PathLike
-
 import dwavebinarycsp
 
 
@@ -283,8 +282,7 @@ class JobShopScheduler:
         self._add_one_start_constraint()
         self._add_precedence_constraint()
         self._add_share_machine_constraint()
-        self._remove_absurd_times(
-            disable_till, disable_since, disabled_variables)
+        self._remove_absurd_times(disable_till, disable_since, disabled_variables)
         # Get BQM
         bqm = dwavebinarycsp.stitch(self.csp, **stitch_kwargs)
 
@@ -342,5 +340,4 @@ class JobShopScheduler:
                 label = get_label(task, t)
                 if label in pruned_variables:
                     bqm.add_variable(label, bias)
-
         return bqm

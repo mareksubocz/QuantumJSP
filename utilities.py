@@ -29,7 +29,7 @@ def draw_solution(jobs, solution, folder=None, lines=[0, 0], full=False):
         ax.annotate(r[0], (cx, cy), color='black', weight='bold',
                     fontsize=8, ha='center', va='center')
 
-    # rysowanie barier ramki
+    # drawing the frame's barriers
     for line in lines:
         plt.axvline(x=line, color='red', linewidth=1, linestyle='--')
 
