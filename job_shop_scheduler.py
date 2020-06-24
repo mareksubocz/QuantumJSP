@@ -174,7 +174,7 @@ class JobShopScheduler:
                         valid_edges, {current_label, next_label})
 
     def _add_share_machine_constraint(self):
-        """self.csp gets the constraint: At most one task per machine per time
+        """self.csp gets the constraint: At most one task per machine per time unit
         """
         sorted_tasks = sorted(self.tasks, key=lambda x: x.machine)
         # Key wrapper for bisect function
@@ -253,6 +253,8 @@ class JobShopScheduler:
                 self.csp.fix_variable(label, 0)
 
         # Times that are interfering with disabled regions
+        # disabled variables, disable_till and disable_since 
+        # are explained in instance_parser.py
         for task in self.tasks:
             if task.machine in disable_till.keys():
                 for i in range(disable_till[task.machine]):

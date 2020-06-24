@@ -43,9 +43,19 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
 def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     new_jobs = defaultdict(list)
     operations_indexes = defaultdict(list)
+
+    # Those dictionaries indicate since or till when each machine should be unused,
+    # because it is already taken by an operation that is happening during start 
+    # or end of time window. Therefore, you can't find them in jobs: dict 
+    # (instance dictionary), because they are removed from it.
     disable_till = defaultdict(int)
     disable_since = defaultdict(lambda: inf)
+
+    # When an operation is scheduled during start or end of time window,
+    # it's previous and subsequent operations are restricted to not last
+    # after or before it (respectively).
     disabled_variables = []
+
     for job_name, start_times in solution.items():
         for i, start_time in enumerate(start_times):
 
