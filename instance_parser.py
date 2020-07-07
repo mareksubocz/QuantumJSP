@@ -182,20 +182,23 @@ def solve_with_order(jobs, order):
 
 
 def checkValidity(jobs: dict, solution: dict) -> bool:
+
     # checking if order of operations in jobs is preserved
     for job, operations in jobs.items():
         for i, (operation1, operation2) in enumerate(list(zip(operations[:-1], operations[1:]))):
             if solution[job][i] + operation1[1] > solution[job][i+1]:
                 return False
-    # checking if no operations on the same machine intersect
+    
     machineDict = transformToMachineDict(jobs, solution)
+
+    # checking if no operations using the same machine intersect
     for machine, operations in machineDict.items():
         for i, operation1 in enumerate(operations):
             for j, operation2 in enumerate(operations):
                 if i == j:
                     continue
-                if not (operation1[1] + operation1[2] <= operation2[1] or
-                        operation2[1] + operation2[2] <= operation1[1]):
+                if not (operation1[1] + operation1[2] <= operation2[1] or # ends before
+                        operation2[1] + operation2[2] <= operation1[1]):  # starts after
                     return False
     return True
 
