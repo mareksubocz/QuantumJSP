@@ -25,12 +25,16 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
 
     Args:
         jobs (dict): description of an instance
-        solution (dict): solution to an instance:
-        {"job_1": [start_time_of_operation_1, start_time of operation_2],
-         "job_2": [start_time_of_operation_1, start_time of operation_2]}
 
-    Returns:
-        dict: #TODO:[description]
+        solution (dict): solution to an instance:
+        {"job_1": [start_time_of_operation_1, start_time_of_operation_2],
+         "job_2": [start_time_of_operation_1, start_time_of_operation_2]}
+
+    Returns: 
+
+        machineDict(dict):
+        {"machine_1": [(job, time_of_operation_start, length), (..., ..., ...), ...],
+         "machine_2:: [(..., ..., ...), ...], ...}
     """
     machine_dict = defaultdict(list)
     for key, value in solution.items():
@@ -178,17 +182,22 @@ def solve_with_order(jobs, order):
 
 
 def checkValidity(jobs: dict, solution: dict) -> bool:
-    # FIXME:Not working properly
-    order = get_order(solution)
-    solution_from_order = solve_with_order(jobs, order)
-    order2 = get_order(solution_from_order)
-
-    # if order != order2:
-    #     pprint(order)
-    #     print('*' * 40)
-    #     pprint(order2)
-
-    return order == order2
+    # checking if order of operations in jobs is preserved
+    for job, operations in jobs.items():
+        for i, (operation1, operation2) in enumerate(list(zip(operations[:-1], operations[1:]))):
+            if solution[job][i] + operation1[1] > solution[job][i+1]:
+                return False
+    # checking if no operations on the same machine intersect
+    machineDict = transformToMachineDict(jobs, solution)
+    for machine, operations in machineDict.items():
+        for i, operation1 in enumerate(operations):
+            for j, operation2 in enumerate(operations):
+                if i == j:
+                    continue
+                if not (operation1[1] + operation1[2] <= operation2[1] or
+                        operation2[1] + operation2[2] <= operation1[1]):
+                    return False
+    return True
 
 
 def get_result(jobs, solution):

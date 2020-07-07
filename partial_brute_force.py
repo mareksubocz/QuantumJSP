@@ -64,7 +64,7 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                     for j in range(len(times)):
                         sol_found[job][indexes[job][j]
                                        ] = task_times[job][j] + i
-                if True:  # FIXME: checkValidity(jobs, sol_found):
+                if checkValidity(jobs, sol_found):
                     solution = sol_found
                     yield solution, i  # solution and place in frame
         except Exception as e:

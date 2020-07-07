@@ -28,6 +28,6 @@ def brute_force_greedy(jobs, solution, qpu=False, num_reads=2000, max_time=None,
                     if sol_found[job][indexes[job][j]] != task_times[job][j] + i:
                         sol_found[job][indexes[job][j]
                                        ] = task_times[job][j] + i
-            if True:  # FIXME: checkValidity(jobs, sol_found):
+            if checkValidity(jobs, sol_found):
                 solution = sol_found
                 yield solution, i  # solution and which timepoint the frame starts on
