@@ -28,27 +28,38 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                 sampler = tabu.TabuSampler()
 
             bqm = get_jss_bqm(jobs, window_size + 1, lagrange_one_hot=lagrange_one_hot, lagrange_precedence=lagrange_precedence, lagrange_share=lagrange_share)
+            
+            # Check elements in the BQM
             for q in bqm.linear:
                 if bqm.linear[q] != -1:
                     print(q)
             for q in bqm.quadratic:
                 if bqm.quadratic[q] != 2:
                     print(q, bqm.quadratic[q])
+
+            # Run BQM and get the solution and the energy
             sampleset = sampler.sample(bqm)
             solution1 = sampleset.first.sample
             energy1 = sampleset.first.energy
+
+            # Determine which nodes are involved
             selected_nodes = [k for k, v in solution1.items() if v == 1 and not k.startswith('aux')]
             print(selected_nodes, ' Energy ', energy1)
+
+            # Compute the task times
             task_times = {k: [-1] * len(v) for k, v in jobs.items()}
             for node in selected_nodes:
                 job_name, task_time = node.rsplit("_", 1)
                 task_index, start_time = map(int, task_time.split(","))
                 task_times[int(job_name)][task_index] = start_time
-            i = 0
             print(' Task times ',task_times)
-            yield solution, i
-            #sol_found = deepcopy(solution)
-            #print(' Sol found ',sol_found)
+ 
+            i = 0
+            sol_found = deepcopy(solution)
+            # TODO: make the "improving original solution" loop work
+            # Original solution is "greedy," and then we provide the
+            # found solution. When I try this loop, the indexes list
+            # seems too short.
             #info = find_time_window(jobs, solution, i, i + window_size)
             #new_jobs, indexes, disable_till, disable_since, disabled_variables = info
             #print(' New jobs ',new_jobs)
@@ -56,10 +67,16 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
             #for job, times in task_times.items():
             #    for j in range(len(times)):
             #        print(' Job ',job, ' Times ',times, ' j ',j)
-            #    if checkValidity(jobs, sol_found):
             #         sol_found[job][indexes[job][j]
             #                       ] = task_times[job][j] + i
             #print(sol_found)
+
+            # TODO: learn how to check the solution. Not sure what the
+            # input needs to look like
+            #if checkValidity(jobs, sol_found):
+
+            #return the solution
+            yield solution, i
 
             #for i in range(max_time - window_size):
             #    info = find_time_window(jobs, solution, i, i + window_size)
