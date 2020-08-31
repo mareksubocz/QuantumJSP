@@ -182,7 +182,27 @@ def solve_with_order(jobs, order):
 
 
 def checkValidity(jobs: dict, solution: dict) -> bool:
+    """Function checking if given solution fulfills all JSP constraints.
 
+    Args:
+        jobs (dict): description of an instance
+        {"job_1": [ (m1, l1), (m2, l2), (m3, l3), (m3, l3), ... ],
+         "job_2": [ (m1, l1), (m2, l2), (m3, l3), (m3, l3), ... ],
+         ...}         
+         where:
+         - mx == machine of task x
+         - lx == length of task x
+
+        solution (dict): solution for an instance:
+        {"job_1": [s1, s2, s3, ...],
+         "job_2": [s1, s2, s3, ...],
+         ...}
+         where:
+        - sx == start time of task x
+
+    Returns:
+        bool: true - solution is valid
+    """
     # checking if order of operations in jobs is preserved
     for job, operations in jobs.items():
         for i, (operation1, operation2) in enumerate(list(zip(operations[:-1], operations[1:]))):
@@ -257,10 +277,10 @@ def squash_lengths(instance, steps=[4, 7]):
     return result
 
 
-if __name__ == "__main__":
-    jobs = readInstance("data/ft06.txt")
-    for i in range(10000):
-        solution = solve_greedily(jobs, 100)
-        result = get_result(jobs, solution)
-        if result < 59:
-            print(result)
+# if __name__ == "__main__":
+#     jobs = readInstance("data/ft06.txt")
+#     for i in range(10000):
+#         solution = solve_greedily(jobs, 100)
+#         result = get_result(jobs, solution)
+#         if result < 59:
+#             print(result)
