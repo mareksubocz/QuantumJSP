@@ -19,3 +19,5 @@ test*.py
 ocean/
 
 .history/
+
+csvresults/
