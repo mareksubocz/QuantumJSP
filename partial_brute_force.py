@@ -60,8 +60,8 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
             # Original solution is "greedy," and then we provide the
             # found solution. When I try this loop, the indexes list
             # seems too short.
-            #info = find_time_window(jobs, solution, i, i + window_size)
-            #new_jobs, indexes, disable_till, disable_since, disabled_variables = info
+            info = find_time_window(jobs, solution, i, i + window_size)
+            new_jobs, indexes, disable_till, disable_since, disabled_variables = info
             #print(' New jobs ',new_jobs)
             #print(' Indexes ',indexes)
             #for job, times in task_times.items():
@@ -76,7 +76,20 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
             #if checkValidity(jobs, sol_found):
 
             #return the solution
-            yield solution, i
+            # yield solution, i
+
+            for job, times in task_times.items():
+                for j in range(len(indexes[job])):
+                    print('^' * 50)
+                    print(task_times)
+                    print(sol_found)
+                    print(indexes)
+                    print('v' * 50)
+                    sol_found[job][indexes[job][j]] = task_times[job][j] + i
+
+            if checkValidity(jobs, sol_found):
+                solution = sol_found
+                yield solution, i
 
             #for i in range(max_time - window_size):
             #    info = find_time_window(jobs, solution, i, i + window_size)

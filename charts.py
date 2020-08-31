@@ -5,6 +5,7 @@ import neal
 import numpy as np
 
 from dwave.system.composites import EmbeddingComposite
+
 from dwave.system.samplers import DWaveSampler
 
 from job_shop_scheduler import get_jss_bqm
@@ -35,6 +36,11 @@ def printResults(sampleset, jobs):
             task_index, start_time = map(int, task_time.split(","))
             task_times[job_name][task_index] = start_time
 
+        if not checkValidity(jobs, task_times):
+            solution_dict['incorrect'] += occurrences
+        else:
+            pprint(jobs)
+            pprint(task_times)
         result = 0
         for job, times in task_times.items():
             if -1 in times:
@@ -69,7 +75,7 @@ def num_of_errors_in_times(qpu=False):
     times = range(4, 12)
     errors = defaultdict(list)
     for time in times:
-        for i in range(12):
+        for _ in range(12):
             try:
                 bqm = get_jss_bqm(jobs, time, stitch_kwargs={
                     'min_classical_gap': 2.0})
@@ -88,7 +94,7 @@ def num_of_errors_in_times(qpu=False):
                 continue
     medians = []
     margins = []
-    for key, values in errors.items():
+    for _, values in errors.items():
         values.sort()
         values = values[1:-1]
         medians.append(median(values))
@@ -103,73 +109,131 @@ def num_of_errors_in_times(qpu=False):
     print(errors)
 
 
-def num_of_errors_in_chain_strengths(qpu=False):
+def num_of_errors_in_min_gap(qpu=False, start=1.0):
     jobs = {"1": [(0, 2), (1, 1), (2, 1)],
-            "2": [(1, 1), (0, 1), (3, 2)],
-            "3": [(2, 1), (3, 1), (1, 1)]}
+            "2": [(1, 1), (2, 2), (0, 1)],
+            "3": [(2, 2), (0, 1), (1, 2)]}
 
-    strengths = (0.5, 1, 1.5, 1.8, 2.0, 2.1, 2.3, 2.5, 3.0, 3.5, 4.0)
-    errors = defaultdict(list)
-    for strength in strengths:
-        for i in range(12):
-            print("tick " + str(strength) + " " + str(i))
-            try:
-                bqm = get_jss_bqm(jobs, 8, stitch_kwargs={
-                    'min_classical_gap': 2.0})
-                if qpu:
-                    sampler = EmbeddingComposite(
-                        DWaveSampler(solver={'qpu': True}))
-                    sampleset = sampler.sample(
-                        bqm, chain_strength=strength, num_reads=1000)
-                else:
-                    sampler = neal.SimulatedAnnealingSampler()
-                    sampleset = sampler.sample(bqm, num_reads=1000)
-                sol_dict = printResults(sampleset, jobs)
-                errors[strength].append(sol_dict['error'])
-            except Exception as e:
-                print(f"error: {strength}")
-                print(e)
-                continue
-    medians = []
-    margins = []
-    for key, values in errors.items():
-        values.sort()
-        values = values[1:-1]
-        medians.append(median(values))
-        margins.append([abs(values[0] - median(values)),
-                        abs(values[-1] - median(values))])
-    plt.errorbar(errors.keys(), medians, yerr=np.array(
-        margins).T, fmt='o-', color='blue')
-    plt.xlabel('chain strength')
-    plt.ylabel('number of error solutions provided (out of 1000)')
-    # plt.show()
-    plt.savefig('chain_strength.png')
-    print(errors)
+    # best_solution = { "1": [0,2,4],
+    #                   "2": [0,2,4],
+    #                   "3": [0,2,3]}
+    #  result: 5
+
+    import csv
+    # wyniki.csv structure:
+    # min_classical_gap, not found, incorrect, num_of_reads, 5, 6, 7, 8, 9, more
+
+    with open("wyniki_min_gap.csv", mode='a') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+        # strengths = (25, 30, 35, 40, 45)
+        # strengths = list(range(20, 25))
+        from numpy import arange
+        gaps = list(arange(start, start+.5, 0.1))
+        num_reads = 1000
+        for gap in gaps:
+            for _ in range(10):
+                try:
+                    bqm = get_jss_bqm(jobs, 8, stitch_kwargs={
+                        'min_classical_gap': gap})
+                    if qpu:
+                        sampler = EmbeddingComposite(
+                            DWaveSampler(solver={'qpu': True}))
+                        sampleset = sampler.sample(
+                            bqm, chain_strength=10.0, num_reads=num_reads)
+                    else:
+                        sampler = neal.SimulatedAnnealingSampler()
+                        sampleset = sampler.sample(bqm, num_reads=num_reads)
+                    sol_dict = printResults(sampleset, jobs)
+                except Exception as e:
+                    print(f"error: {gap}")
+                    print(e)
+                    from time import sleep
+                    sleep(60)
+                    continue
+                result_row = [gap, sol_dict['error'], sol_dict['incorrect'],
+                               num_reads] + [sol_dict[i] for i in range(5, 10)]
+                filewriter.writerow(result_row)
+                print('zapisane', gap)
+
+        from time import sleep
+        sleep(30)
+
+def num_of_errors_in_chain_strengths(qpu=False, start=1):
+    jobs = {"1": [(0, 2), (1, 1), (2, 1)],
+            "2": [(1, 1), (2, 2), (0, 1)],
+            "3": [(2, 2), (0, 1), (1, 2)]}
+
+    # best_solution = { "1": [0,2,4],
+    #                   "2": [0,2,4],
+    #                   "3": [0,2,3]}
+    #  result: 5
+
+    import csv
+    # wyniki.csv structure:
+    # chain_strength, not found, incorrect, num_of_reads, 5, 6, 7, 8, 9, more
+
+    with open("wyniki_chain_strength.csv", mode='a') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+        # strengths = (25, 30, 35, 40, 45)
+        # strengths = list(range(20, 25))
+        strengths = list(range(start, start+5))
+        num_reads = 1000
+        for strength in strengths:
+            for _ in range(10):
+                try:
+                    bqm = get_jss_bqm(jobs, 8, stitch_kwargs={
+                        'min_classical_gap': 2.0})
+                    if qpu:
+                        sampler = EmbeddingComposite(
+                            DWaveSampler(solver={'qpu': True}))
+                        sampleset = sampler.sample(
+                            bqm, chain_strength=strength, num_reads=num_reads)
+                    else:
+                        sampler = neal.SimulatedAnnealingSampler()
+                        sampleset = sampler.sample(bqm, num_reads=num_reads)
+                    sol_dict = printResults(sampleset, jobs)
+                except Exception as e:
+                    print(f"error: {strength}")
+                    print(e)
+                    from time import sleep
+                    sleep(60)
+                    continue
+                result_row = [strength, sol_dict['error'], sol_dict['incorrect'],
+                               num_reads] + [sol_dict[i] for i in range(5, 10)]
+                filewriter.writerow(result_row)
+                print('zapisane', strength)
+
+        from time import sleep
+        sleep(30)
 
 
-def num_of_errors_in_length(qpu=True):
-    jobs3 = {"1": [(0, 2), (1, 1), (0, 1)],
-             "2": [(1, 1), (0, 1), (2, 2)],
-             "3": [(2, 1), (2, 1), (1, 1)]}
-    jobs4 = {"1": [(0, 2), (1, 1), (0, 1)],
-             "2": [(1, 1), (0, 1), (2, 2)],
-             "3": [(2, 1), (2, 1), (1, 1)]}
-    jobs5 = {"1": [(0, 2), (1, 1), (0, 1)],
-             "2": [(1, 1), (0, 1), (2, 2)],
-             "3": [(2, 1), (2, 1), (1, 1)]}
-    jobs6 = {"1": [(0, 2), (1, 1), (0, 1)],
-             "2": [(1, 1), (0, 1), (2, 2)],
-             "3": [(2, 1), (2, 1), (1, 1)]}
-    jobs7 = {"1": [(0, 2), (1, 1), (0, 1)],
-             "2": [(1, 1), (0, 1), (2, 2)],
-             "3": [(2, 1), (2, 1), (1, 1)]}
+# def num_of_errors_in_length(qpu=True):
+#     jobs3 = {"1": [(0, 2), (1, 1), (0, 1)],
+#              "2": [(1, 1), (0, 1), (2, 2)],
+#              "3": [(2, 1), (2, 1), (1, 1)]}
+#     jobs4 = {"1": [(0, 2), (1, 1), (0, 1)],
+#              "2": [(1, 1), (0, 1), (2, 2)],
+#              "3": [(2, 1), (2, 1), (1, 1)]}
+#     jobs5 = {"1": [(0, 2), (1, 1), (0, 1)],
+#              "2": [(1, 1), (0, 1), (2, 2)],
+#              "3": [(2, 1), (2, 1), (1, 1)]}
+#     jobs6 = {"1": [(0, 2), (1, 1), (0, 1)],
+#              "2": [(1, 1), (0, 1), (2, 2)],
+#              "3": [(2, 1), (2, 1), (1, 1)]}
+#     jobs7 = {"1": [(0, 2), (1, 1), (0, 1)],
+#              "2": [(1, 1), (0, 1), (2, 2)],
+#              "3": [(2, 1), (2, 1), (1, 1)]}
 
 
 def frequencies():
     jobs = readInstance("data/ft06.txt")
     results = defaultdict(int)
     ilosc = 10000
-    for i in range(ilosc):
+    for _ in range(ilosc):
         results[get_result(jobs, solve_greedily(jobs))] += 1
     pprint(results)
     plt.bar(list(results.keys()), list(results.values()), align='center')
