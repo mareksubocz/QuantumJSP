@@ -14,7 +14,7 @@ A heuristic approach on how to optimally schedule jobs using a quantum computer.
 
 ## About The Project
 
-<img src="img/solutions5_2_cropped.gif"/>
+<img src="visualization.gif"/>
 
 *Note: Numbers in bars represent jobs*
 
