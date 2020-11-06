@@ -1,14 +1,16 @@
-from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatch
 from instance_parser import transformToMachineDict, get_result
-import glob
 
 colors = ['red', 'green', 'yellow', 'blue', 'violet', 'orange']
 colorsHEX = ['#FF3333', '#79D279', '#FFFF66', '#80B3FF', '#C299FF', '#FFDAB3']
 
+def draw_solution_ascii():
+    pass
 
 def draw_solution(jobs, solution, folder=None, lines=[0, 0], full=False):
+    from pathlib import Path
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatch
+    import glob
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.set_aspect(aspect=1.5)
     rectangles = []

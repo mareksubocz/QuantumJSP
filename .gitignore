@@ -3,12 +3,12 @@ report/
 __pycache__/
 
 test.py
+wykresy.py
+statystyki.py
 
 .vscode/
 
 env/
-
-img/gantt/
 
 .DS_Store
 

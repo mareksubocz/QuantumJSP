@@ -14,16 +14,16 @@ from pprint import pprint
 
 from copy import deepcopy
 
-
-def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=None, window_size=5, chain_strength=2, times=10):
+def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
+                           max_time=None, window_size=5, chain_strength=2,
+                           num_of_iterations=10, min_classical_gap=2):
     if max_time is None:
         max_time = get_result(jobs, solution) + 3
-    for iteration_number in range(times):
-        print(iteration_number)
+    for iteration_number in range(num_of_iterations):
+        print('-'*10, f"iteration {iteration_number+1}/{num_of_iterations}",'-'*10)
         try:
             if qpu:
-                sampler = EmbeddingComposite(
-                    DWaveSampler(solver={'qpu': True}))
+                sampler = EmbeddingComposite(DWaveSampler())
             else:
                 sampler = neal.SimulatedAnnealingSampler()
 
@@ -36,7 +36,9 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
 
                 try:
                     bqm = get_jss_bqm(new_jobs, window_size + 1, disable_till, disable_since,
-                                      disabled_variables, stitch_kwargs={'min_classical_gap': 2})
+                                      disabled_variables,
+                                      stitch_kwargs={'min_classical_gap':
+                                                     min_classical_gap})
                 except ImpossibleBQM:
                     print('*' * 25 + " It's impossible to construct a BQM " + '*' * 25)
                     continue
@@ -65,7 +67,8 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000, max_time=N
                         sol_found[job][indexes[job][j]
                                        ] = task_times[job][j] + i
                 if checkValidity(jobs, sol_found):
-                    solution = sol_found
+                    solution = deepcopy(sol_found)
+                    # solution = sol_found
                     yield solution, i  # solution and place in frame
         except Exception as e:
             # uncomment this if you want to apply some behaviuor when exception occurs

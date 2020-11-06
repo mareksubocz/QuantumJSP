@@ -27,7 +27,7 @@ def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disab
         >>> max_time = 4	  # Put an upperbound on how long the schedule can be
         >>> bqm = get_jss_bqm(jobs, max_time, stitch_kwargs)
         >>> # May need to tweak the chain strength and the number of reads
-        >>> sampler = EmbeddingComposite(DWaveSampler(solver={'qpu':True}))
+        >>> sampler = EmbeddingComposite(DWaveSampler())
         >>> sampleset = sampler.sample(bqm, chain_strength=2, num_reads=1000)
         >>> # Results
         >>> # Note: Each node follows the format <job_name>_<task_number>,<time>.
@@ -124,6 +124,7 @@ class JobShopScheduler:
             dwavebinarycsp.BINARY)
 
         # Populates self.tasks and self.max_time
+
         self._process_data(job_dict)
 
     def _process_data(self, jobs):
@@ -253,7 +254,7 @@ class JobShopScheduler:
                 self.csp.fix_variable(label, 0)
 
         # Times that are interfering with disabled regions
-        # disabled variables, disable_till and disable_since 
+        # disabled variables, disable_till and disable_since
         # are explained in instance_parser.py
         for task in self.tasks:
             if task.machine in disable_till.keys():
@@ -285,7 +286,6 @@ class JobShopScheduler:
         self._add_precedence_constraint()
         self._add_share_machine_constraint()
         self._remove_absurd_times(disable_till, disable_since, disabled_variables)
-        # Get BQM
         bqm = dwavebinarycsp.stitch(self.csp, **stitch_kwargs)
 
         # Edit BQM to encourage the shortest schedule
