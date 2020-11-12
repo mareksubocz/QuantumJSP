@@ -351,24 +351,24 @@ class JobShopScheduler:
         #
         # - Therefore, with this penalty scheme, all optimal solution penalties < any non-optimal
         #   solution penalties
-        #base = len(self.last_task_indices) + 1     # Base for exponent
+        base = len(self.last_task_indices) + 1     # Base for exponent
         # Get our pruned (remove_absurd_times) variable list so we don't undo pruning
         #pruned_variables = list(bqm.variables)
-        #for i in self.last_task_indices:
-        #    task = self.tasks[i]
+        for i in self.last_task_indices:
+            task = self.tasks[i]
 
-        #    for t in range(self.max_time):
-        #        end_time = t + task.duration
+            for t in range(self.max_time):
+                end_time = t + task.duration
 
-        #        # Check task's end time; do not add in absurd times
-        #        if end_time > self.max_time:
-        #            continue
+                # Check task's end time; do not add in absurd times
+                if end_time > self.max_time:
+                    continue
 
-        #        # Add bias to variable
-        #        bias = 2 * base**(end_time - self.max_time)
-        #        label = get_label(task, t)
-        #        if label in pruned_variables:
-        #            bqm.add_variable(label, bias)
+                # Add bias to variable
+                bias = 2 * base**(end_time - self.max_time)
+                label = get_label(task, t)
+                var = Binary(label)
+                self.H += var * bias
         # Get BQM
         self.model = self.H.compile()
         bqm = self.model.to_dimod_bqm()
