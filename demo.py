@@ -17,7 +17,7 @@ print("Performing the algorithm...")
 for current_result, _ in solve_with_pbruteforce(squashed_jobs,
                                                 initial_solution,
                                                 window_size=5,
-                                                qpu=False):
+                                                qpu=True):
     print(f"Current_result: {get_result(squashed_jobs, current_result)}")
 
 order = get_order(current_result)
