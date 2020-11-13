@@ -277,10 +277,10 @@ def squash_lengths(instance, steps=[4, 7]):
     return result
 
 
-if __name__ == "__main__":
-    jobs = readInstance("data/ft06.txt")
-    for i in range(10000):
-        solution = solve_greedily(jobs, 100)
-        result = get_result(jobs, solution)
-        if result < 59:
-            print(result)
+# if __name__ == "__main__":
+#     jobs = readInstance("data/ft06.txt")
+#     for i in range(10000):
+#         solution = solve_greedily(jobs, 100)
+#         result = get_result(jobs, solution)
+#         if result < 59:
+#             print(result)
