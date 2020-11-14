@@ -5,7 +5,7 @@ from os import PathLike
 from pyqubo import Binary
 
 
-def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, stitch_kwargs=None, lagrange_one_hot=1, lagrange_precedence=1, lagrange_share=1):
+def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, lagrange_one_hot=1, lagrange_precedence=1, lagrange_share=1):
     """Returns a BQM to the Job Shop Scheduling problem.
     Args:
         job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
@@ -44,8 +44,6 @@ def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disab
           - Job a's 1st task is ("oven", 1)
           - Hence, at time 0, Job a's 1st task is not run
     """
-    if stitch_kwargs is None:
-        stitch_kwargs = {}
     if disable_till is None:
         disable_till = {}
     if disable_since is None:
@@ -54,7 +52,10 @@ def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disab
         disabled_variables = []
 
     scheduler = JobShopScheduler(job_dict, max_time)
-    return scheduler.get_bqm(disable_till, disable_since, disabled_variables, stitch_kwargs, lagrange_one_hot, lagrange_precedence, lagrange_share)
+    return scheduler.get_bqm(disable_till, disable_since, disabled_variables,
+                             lagrange_one_hot,
+                             lagrange_precedence,
+                             lagrange_share)
 
 
 def sum_to_one(*args):
@@ -123,8 +124,12 @@ class JobShopScheduler:
         # Initialize Hamiltonian
         self.H = 0
         self.H_vars = set()
+        # Variables that we know cannot be true beforehand and we don't want
+        # them in a Hamiltonian.
+        self.absurd_times = set()
 
         # Populates self.tasks and self.max_time
+
         self._process_data(job_dict)
 
     def _process_data(self, jobs):
@@ -156,6 +161,8 @@ class JobShopScheduler:
             task_times = {get_label(task, t) for t in range(self.max_time)}
             H_term = 0
             for p_var in task_times:
+                if p_var in self.absurd_times:
+                   continue
                 if p_var not in self.H_vars:
                     x_var = Binary(p_var)
                     self.H_vars.add(x_var)
@@ -175,6 +182,8 @@ class JobShopScheduler:
             # Forming constraints with the relevant times of the next task
             for t in range(self.max_time):
                 current_label = get_label(current_task, t)
+                if current_label in self.absurd_times:
+                    continue
 
                 if current_label not in self.H_vars:
                     var1 = Binary(current_label)
@@ -184,6 +193,8 @@ class JobShopScheduler:
                 for tt in range(min(t + current_task.duration, self.max_time)):
 
                     next_label = get_label(next_task, tt)
+                    if next_label in self.absurd_times:
+                        continue
                     if next_label not in self.H_vars:
                         var2 = Binary(next_label)
                     else:
@@ -220,6 +231,8 @@ class JobShopScheduler:
 
                     for t in range(self.max_time):
                         current_label = get_label(task, t)
+                        if current_label in self.absurd_times:
+                            continue
 
                         if current_label not in self.H_vars:
                             var1 = Binary(current_label)
@@ -228,6 +241,8 @@ class JobShopScheduler:
 
                         for tt in range(t, min(t + task.duration, self.max_time)):
                             this_label = get_label(other_task, tt)
+                            if this_label in self.absurd_times:
+                                continue
                             if this_label not in self.H_vars:
                                 var2 = Binary(this_label)
                             else:
@@ -257,7 +272,7 @@ class JobShopScheduler:
 
             for t in range(predecessor_time):
                 label = get_label(task, t)
-                self.csp.fix_variable(label, 0)
+                self.absurd_times.add(label)
 
             predecessor_time += task.duration
 
@@ -277,7 +292,7 @@ class JobShopScheduler:
             for t in range(successor_time):
                 # -1 for zero-indexed time
                 label = get_label(task, (self.max_time - 1) - t)
-                self.csp.fix_variable(label, 0)
+                self.absurd_times.add(label)
 
         # Times that are interfering with disabled regions
         # disabled variables, disable_till and disable_since 
@@ -286,32 +301,25 @@ class JobShopScheduler:
             if task.machine in disable_till.keys():
                 for i in range(disable_till[task.machine]):
                     label = get_label(task, i)
-                    if label in self.csp.variables:
-                        self.csp.fix_variable(label, 0)
+                    self.absurd_times.add(label)
             elif task.machine in disable_since.keys():
                 for i in range(disable_since[task.machine], self.max_time):
                     label = get_label(task, i)
-                    if label in self.csp.variables:
-                        self.csp.fix_variable(label, 0)
+                    self.absurd_times.add(label)
 
         # Times that are manually disabled
         for label in disabled_variables:
-            if label in self.csp.variables:
-                self.csp.fix_variable(label, 0)
+            self.absurd_times.add(label)
 
-    def get_bqm(self, disable_till, disable_since, disabled_variables, stitch_kwargs=None, lagrange_one_hot=1, lagrange_precedence=1, lagrange_share=1):
-        """Returns a BQM to the Job Shop Scheduling problem.
-        Args:
-            stitch_kwargs: A dict. Kwargs to be passed to dwavebinarycsp.stitch.
-        """
-        if stitch_kwargs is None:
-            stitch_kwargs = {}
+    def get_bqm(self, disable_till, disable_since, disabled_variables,
+                lagrange_one_hot, lagrange_precedence, lagrange_share):
+        """Returns a BQM to the Job Shop Scheduling problem.  """
 
         # Apply constraints to self.csp
+        self._remove_absurd_times(disable_till, disable_since, disabled_variables)
         self._add_one_start_constraint(lagrange_one_hot)
         self._add_precedence_constraint(lagrange_precedence)
         self._add_share_machine_constraint(lagrange_share)
-        #self._remove_absurd_times(disable_till, disable_since, disabled_variables)
         # Get BQM
         #bqm = dwavebinarycsp.stitch(self.csp, **stitch_kwargs)
 
@@ -351,24 +359,30 @@ class JobShopScheduler:
         #
         # - Therefore, with this penalty scheme, all optimal solution penalties < any non-optimal
         #   solution penalties
-        #base = len(self.last_task_indices) + 1     # Base for exponent
+        base = len(self.last_task_indices) + 1     # Base for exponent
         # Get our pruned (remove_absurd_times) variable list so we don't undo pruning
         #pruned_variables = list(bqm.variables)
-        #for i in self.last_task_indices:
-        #    task = self.tasks[i]
+        for i in self.last_task_indices:
+            task = self.tasks[i]
 
-        #    for t in range(self.max_time):
-        #        end_time = t + task.duration
+            for t in range(self.max_time):
+                end_time = t + task.duration
 
-        #        # Check task's end time; do not add in absurd times
-        #        if end_time > self.max_time:
-        #            continue
+                # Check task's end time; do not add in absurd times
+                if end_time > self.max_time:
+                    continue
 
-        #        # Add bias to variable
-        #        bias = 2 * base**(end_time - self.max_time)
-        #        label = get_label(task, t)
-        #        if label in pruned_variables:
-        #            bqm.add_variable(label, bias)
+                # Add bias to variable
+                bias = 2 * base**(end_time - self.max_time)
+                label = get_label(task, t)
+                if label in self.absurd_times:
+                    continue
+                if label not in self.H_vars:
+                    var = Binary(label)
+                else:
+                    var = self.H_vars[label]
+                self.H += var * bias
+
         # Get BQM
         self.model = self.H.compile()
         bqm = self.model.to_dimod_bqm()

@@ -8,6 +8,9 @@ test.py
 
 env/
 
+statystyki.py
+wykresy.py
+
 img/gantt/
 
 .DS_Store
