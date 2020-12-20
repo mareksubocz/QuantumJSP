@@ -135,7 +135,10 @@ def solve_greedily(jobs: dict):
     return solution
 
 
-def solve_worse(jobs: dict, max_time):
+def solve_worse(jobs: dict):
+    max_time = 0
+    for job in jobs.values():
+        max_time += sum(a[1] for a in job)
     free_space = {}
     solution = defaultdict(list)
     for operations in jobs.values():
