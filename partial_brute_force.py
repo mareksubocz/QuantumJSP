@@ -34,7 +34,9 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
 
             # looping over parts of the instance, solving small sub-instances
             # of size window_size
-            for i in range(max_time - window_size):
+            from random import sample
+            for i in sample(range(max_time - window_size), len(range(max_time -
+                                                                     window_size))):
 
                 # cutting out the sub-instance
                 info = find_time_window(jobs, solution, i, i + window_size)
