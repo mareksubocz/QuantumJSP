@@ -1,58 +1,36 @@
-from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatch
-from instance_parser import transformToMachineDict, get_result
-import glob
+import plotly.express as px
+from instance_parser import get_result
+from datetime import datetime
 
-colors = ['red', 'green', 'yellow', 'blue', 'violet', 'orange']
-colorsHEX = ['#FF3333', '#79D279', '#FFFF66', '#80B3FF', '#C299FF', '#FFDAB3']
+import plotly.figure_factory as ff
 
 
-def draw_solution(jobs, solution, folder=None, lines=[0, 0], full=False):
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.set_aspect(aspect=1.5)
-    rectangles = []
-    machine_dict = transformToMachineDict(jobs, solution)
-    for machine, operations in machine_dict.items():
-        for operation in operations:
-            # plt.gca().add_patch(plt.Rectangle(
-                # (operation[1], machine), operation[2] - 0.1, 0.9, name="cos"))
-            rectangles.append((str(operation[0]), mpatch.Rectangle(
-                (operation[1], machine + 1.5), operation[2] - 0.2, 0.9, color=colorsHEX[machine]), ))
+def convert_to_datetime(x):
+  return datetime.fromtimestamp(31536000+x*24*3600).strftime("%Y-%m-%d")
 
-    for r in rectangles:
-        ax.add_artist(r[1])
-        rx, ry = r[1].get_xy()
-        cx = rx + r[1].get_width() / 2.0
-        cy = ry + r[1].get_height() / 2.0
+def draw_solution(jobs: dict, solution: dict, x_max=None, lines=[]):
+    df = []
+    if x_max is None:
+        x_max = get_result(jobs, solution)
+    for job, tasks in solution.items():
+        for i, start in enumerate(tasks):
+            machine, length = jobs[job][i]
+            df.append(dict(Machine=machine,
+                           Start=convert_to_datetime(start),
+                           Finish=convert_to_datetime(start+length),
+                           Job=str(job)))
 
-        ax.annotate(r[0], (cx, cy), color='black', weight='bold',
-                    fontsize=8, ha='center', va='center')
+    num_tick_labels = list(range(x_max+1))
+    date_ticks = [convert_to_datetime(x) for x in num_tick_labels]
 
-    # drawing the frame's barriers
-    for line in lines:
-        plt.axvline(x=line, color='red', linewidth=1, linestyle='--')
-
-    # ax.set_xlim((0, get_result(jobs, solution) + 1))
-    ax.set_xlim(0, 65)
-    ax.set_ylim((1, len(jobs) + 2))
-    ax.set_xticks(range(0, get_result(jobs, solution) + 1, 2))
-    ax.set_yticks(range(1, len(jobs) + 2))
-    ax.set_yticklabels(['', *map(str, range(1, len(jobs) + 1))])
-    ax.tick_params(left=False)
-    ax.set_ylabel('Machine')
-    ax.set_xlabel('Time Units')
-    if full:
-        ax.set_xlabel('Makespan')
-    if folder is None:
-        plt.show()
-    else:
-        folder_path = './img/gantt/' + folder
-        Path(folder_path).mkdir(parents=True, exist_ok=True)
-        number = len(glob.glob(folder_path + '/*'))
-        plt.savefig(folder_path + '/' + '0' * (4 - len(str(number))) + str(number)
-                    + '_' + str(get_result(jobs, solution)))
-    plt.close()
+    fig = px.timeline(df, y="Machine", x_start="Start", x_end="Finish", color="Job")
+    fig.layout.xaxis.update({
+        'tickvals' : date_ticks,
+        'ticktext' : num_tick_labels,
+        'range' : [convert_to_datetime(0), convert_to_datetime(x_max)]
+    })
+    fig.update_yaxes(autorange="reversed") # otherwise tasks are listed from the bottom up
+    fig.show()
 
 
 if __name__ == "__main__":
