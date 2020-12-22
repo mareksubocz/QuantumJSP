@@ -24,6 +24,7 @@ def draw_solution(jobs: dict, solution: dict, x_max=None, lines=[]):
     date_ticks = [convert_to_datetime(x) for x in num_tick_labels]
 
     fig = px.timeline(df, y="Machine", x_start="Start", x_end="Finish", color="Job")
+    fig.update_traces(marker=dict(line=dict(width=3, color='black')), opacity=0.5)
     fig.layout.xaxis.update({
         'tickvals' : date_ticks,
         'ticktext' : num_tick_labels,
