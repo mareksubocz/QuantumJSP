@@ -2,6 +2,11 @@
 
 A heuristic approach on how to optimally schedule jobs using a quantum computer.
 
+*Publication can be found [here](https://link.springer.com/chapter/10.1007/978-3-030-50433-5_39).*
+
+**NOTE:** for a more beginner-friendly solution check out the "master" branch. \
+(works much more quickly while using simulation instead of real qpu.)
+
 ## Table of Contents
 * [About the Project](#about-the-project)
 * [Getting started](#getting-started)
