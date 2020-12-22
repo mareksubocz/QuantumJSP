@@ -1,5 +1,4 @@
 import tabu
-import neal
 
 from dwave.system.composites import EmbeddingComposite
 from dwave.system.samplers import DWaveSampler
