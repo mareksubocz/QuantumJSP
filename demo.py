@@ -17,14 +17,14 @@ print(f"Result without squashing: {first_result}")
 # job squashing
 squashed_jobs = squash_lengths(jobs)
 
+# uncomment to skip job squashing
+# squashed_jobs = jobs
+
 order = get_order(first_solution)
 initial_solution = solve_with_order(squashed_jobs, order)
 
 # uncomment if you want to leave space between operations at the start
 initial_solution = first_solution
-
-# uncomment to skip job squashing
-# squashed_jobs = jobs
 
 initial_result = get_result(squashed_jobs, initial_solution)
 print(f"Initial (greedy) solution result: {initial_result}")
