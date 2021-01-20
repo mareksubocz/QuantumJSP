@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 from bisect import bisect_right
-from os import PathLike
 from pyqubo import Binary
 
 
@@ -56,10 +55,6 @@ def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disab
                              lagrange_one_hot,
                              lagrange_precedence,
                              lagrange_share)
-
-
-def sum_to_one(*args):
-    return sum(args) == 1
 
 
 def get_label(task, time):
@@ -123,7 +118,7 @@ class JobShopScheduler:
         self.max_time = max_time
         # Initialize Hamiltonian
         self.H = 0
-        self.H_vars = set()
+        self.H_vars = {}
         # Variables that we know cannot be true beforehand and we don't want
         # them in a Hamiltonian.
         self.absurd_times = set()
@@ -160,15 +155,15 @@ class JobShopScheduler:
         for task in self.tasks:
             task_times = {get_label(task, t) for t in range(self.max_time)}
             H_term = 0
-            for p_var in task_times:
-                if p_var in self.absurd_times:
+            for label in task_times:
+                if label in self.absurd_times:
                    continue
-                if p_var not in self.H_vars:
-                    x_var = Binary(p_var)
-                    self.H_vars.add(x_var)
+                if label not in self.H_vars:
+                    var = Binary(label)
+                    self.H_vars[label] = var
                 else:
-                    x_var = self.H_vars[p_var]
-                H_term += x_var
+                    var = self.H_vars[label]
+                H_term += var
             self.H += lagrange_one_hot * ((1 - H_term) ** 2)
 
     def _add_precedence_constraint(self, lagrange_precedence=1):
@@ -187,6 +182,7 @@ class JobShopScheduler:
 
                 if current_label not in self.H_vars:
                     var1 = Binary(current_label)
+                    self.H_vars[current_label] = var1
                 else:
                     var1 = self.H_vars[current_label]
 
@@ -197,6 +193,7 @@ class JobShopScheduler:
                         continue
                     if next_label not in self.H_vars:
                         var2 = Binary(next_label)
+                        self.H_vars[next_label] = var2
                     else:
                         var2 = self.H_vars[next_label]
 
@@ -236,6 +233,7 @@ class JobShopScheduler:
 
                         if current_label not in self.H_vars:
                             var1 = Binary(current_label)
+                            self.H_vars[current_label] = var1
                         else:
                             var1 = self.H_vars[current_label]
 
@@ -245,6 +243,7 @@ class JobShopScheduler:
                                 continue
                             if this_label not in self.H_vars:
                                 var2 = Binary(this_label)
+                                self.H_vars[this_label] = var2
                             else:
                                 var2 = self.H_vars[this_label]
 
@@ -379,11 +378,12 @@ class JobShopScheduler:
                     continue
                 if label not in self.H_vars:
                     var = Binary(label)
+                    self.H_vars[label] = var
                 else:
                     var = self.H_vars[label]
                 self.H += var * bias
 
         # Get BQM
         self.model = self.H.compile()
-        bqm = self.model.to_dimod_bqm()
+        bqm = self.model.to_bqm()
         return bqm
