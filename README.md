@@ -13,7 +13,7 @@ A heuristic approach on how to optimally schedule jobs using a quantum computer.
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
   * [Quick Start](#quick-start)
-* [References](#references)
+* [How to cite our work](#how-to-cite-our-work)
 
 ## About The Project
 
@@ -55,5 +55,7 @@ git clone https://github.com/mareksubocz/QuantumJSP
 python3 demo.py data/ft06.txt
 ```
 
-## References
-D. Venturelli, D. Marchand, and G. Rojo, "Quantum Annealing Implementation of Job-Shop Scheduling", https://arxiv.org/abs/1506.08479v2
+## How to cite our work
+Kurowski K., Wȩglarz J., Subocz M., Różycki R., Waligóra G. (2020) Hybrid Quantum Annealing Heuristic Method for Solving Job Shop Scheduling Problem.
+In: Krzhizhanovskaya V. et al. (eds) Computational Science – ICCS 2020. ICCS 2020. Lecture Notes in Computer Science, vol 12142. Springer, Cham.
+https://doi.org/10.1007/978-3-030-50433-5_39
