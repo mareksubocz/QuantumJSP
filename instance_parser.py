@@ -2,7 +2,6 @@ from collections import defaultdict
 from copy import deepcopy
 from job_shop_scheduler import get_label, Task
 from math import inf
-from pprint import pprint
 from random import shuffle
 
 
@@ -211,7 +210,7 @@ def checkValidity(jobs: dict, solution: dict) -> bool:
         for i, (operation1, operation2) in enumerate(list(zip(operations[:-1], operations[1:]))):
             if solution[job][i] + operation1[1] > solution[job][i+1]:
                 return False
-    
+
     machineDict = transformToMachineDict(jobs, solution)
 
     # checking if no operations using the same machine intersect

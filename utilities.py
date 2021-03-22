@@ -2,8 +2,6 @@ import plotly.express as px
 from instance_parser import get_result
 from datetime import datetime
 
-import plotly.figure_factory as ff
-
 
 def convert_to_datetime(x):
   return datetime.fromtimestamp(31536000+x*24*3600).strftime("%Y-%m-%d")

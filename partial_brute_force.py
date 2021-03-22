@@ -1,10 +1,10 @@
 import tabu
 
 from dwave.system.composites import EmbeddingComposite
-from dwave.system.samplers import DWaveSampler
+from dwave.system import LeapHybridDQMSampler
 from dwavebinarycsp.exceptions import ImpossibleBQM
 
-from job_shop_scheduler import get_jss_bqm
+from job_shop_scheduler import get_jss_dqm
 
 from instance_parser import *
 
@@ -27,7 +27,7 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
         print('-'*10, f"iteration {iteration_number+1}/{num_of_iterations}",'-'*10)
         try:
             if qpu:
-                sampler = EmbeddingComposite(DWaveSampler())
+                sampler = EmbeddingComposite(LeapHybridDQMSampler())
             else:
                 sampler = tabu.TabuSampler()
 
@@ -49,21 +49,23 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
                 if not bool(new_jobs):  # if sub-instance is empty
                     continue
 
-                # constructing Binary Quadratic Model
+                # constructing Discrete Quadratic Model
                 try:
-                    bqm = get_jss_bqm(new_jobs, window_size + 1, disable_till, disable_since,
+                    dqm = get_jss_dqm(new_jobs, window_size + 1, disable_till, disable_since,
                                       disabled_variables, lagrange_one_hot,
                                       lagrange_precedence, lagrange_share)
                 except ImpossibleBQM:
-                    print('*' * 25 + " It's impossible to construct a BQM " + '*' * 25)
+                    print('*' * 25 + " It's impossible to construct a DQM " + '*' * 25)
                     continue
 
                 # reding num_reads responses from the sampler
-                sampleset = sampler.sample(bqm, chain_strength=chain_strength,
+                sampleset = sampler.sample_dqm(dqm, chain_strength=chain_strength,
                                            num_reads=num_reads)
 
-                # using the best (lowest energy) sample 
+                # using the best (lowest energy) sample
                 solution1 = sampleset.first.sample
+                print(solution1)
+                # FIXME: dokończ tutaj
 
                 # variables that were selected by the sampler
                 # (apart from the auxiliary variables)
@@ -91,7 +93,7 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
                     yield solution, i  # solution and current position of window
 
         except Exception as e:
-            # uncomment this if you want to apply some behaviuor 
+            # uncomment this if you want to apply some behaviuor
             # in demo.py when exception occurs:
             # yield 'ex', 'ex'
             print(e)

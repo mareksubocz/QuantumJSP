@@ -6,7 +6,7 @@ test.py
 
 .vscode/
 
-env/
+ENV/
 
 statystyki.py
 wykresy.py
