@@ -27,7 +27,7 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
         print('-'*10, f"iteration {iteration_number+1}/{num_of_iterations}",'-'*10)
         try:
             if qpu:
-                sampler = EmbeddingComposite(LeapHybridDQMSampler())
+                sampler = LeapHybridDQMSampler()
             else:
                 sampler = tabu.TabuSampler()
 
@@ -59,8 +59,9 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
                     continue
 
                 # reding num_reads responses from the sampler
-                sampleset = sampler.sample_dqm(dqm, chain_strength=chain_strength,
-                                           num_reads=num_reads)
+                # sampleset = sampler.sample_dqm(dqm, chain_strength=chain_strength,
+                #                            num_reads=num_reads)
+                sampleset = sampler.sample_dqm(dqm)
 
                 # using the best (lowest energy) sample
                 solution1 = sampleset.first.sample
@@ -97,4 +98,5 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
             # in demo.py when exception occurs:
             # yield 'ex', 'ex'
             print(e)
+            import traceback; print(traceback.print_exc())
             continue

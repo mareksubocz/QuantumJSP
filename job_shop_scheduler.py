@@ -150,9 +150,10 @@ class JobShopScheduler:
         # TODO: we will add biases[i][j] and biases[j][i] at the end
         for task1, task2 in itertools.product(self.tasks, self.tasks):
             if task1 == task2:
-                biases[get_label(task1)] = np.zeros(self.max_time)
+                self.biases[get_label(task1)] = np.zeros(self.max_time)
             else:
-                biases[(get_label(task1), get_label(task2))] = np.zeros(self.max_time, self.max_time)
+                self.biases[(get_label(task1), get_label(task2))] = \
+                np.zeros((self.max_time, self.max_time))
 
 
     def _add_precedence_constraint(self, lagrange_precedence=1):
@@ -165,8 +166,9 @@ class JobShopScheduler:
             # label current task, label next task
             lct = get_label(current_task)
             lnt = get_label(next_task)
-            for t, tt in zip(range(self.max_time), range(1, self.max_time)):
-                self.biases[(lct,lnt)][tt][t] += lagrange_precedence
+            for t in range(self.max_time):
+                for tt in range(0, min(t+current_task.duration, self.max_time)):
+                    self.biases[(lct,lnt)][t][tt] += lagrange_precedence
 
 
     def _add_share_machine_constraint(self, lagrange_share=1):
@@ -186,7 +188,7 @@ class JobShopScheduler:
 
 
     def _remove_absurd_times(self, disable_till: dict, disable_since,
-                             disabled_variables, lagrange_absurd=1000):
+                             disabled_variables, lagrange_absurd=10):
         """Sets impossible task times in self.csp to 0.
 
         Args:
@@ -244,9 +246,8 @@ class JobShopScheduler:
                     self.biases[label][i] += lagrange_absurd
 
         # Times that are manually disabled
-        for label in disabled_variables:
-            l, t = label.split(',')
-            self.biases[l][int(t)] += lagrange_absurd
+        for label, t in disabled_variables:
+            self.biases[label][int(t)] += lagrange_absurd
 
     def get_dqm(self, disable_till, disable_since, disabled_variables,
                 lagrange_one_hot, lagrange_precedence, lagrange_share):
@@ -315,12 +316,18 @@ class JobShopScheduler:
 
         # Get DQM
         dqm = dimod.DiscreteQuadraticModel()
-        for key, value in biases.items():
+        for task in self.tasks:
+            dqm.add_variable(self.max_time, label=get_label(task))
+        for key, value in self.biases.items():
             if type(key) is tuple:
                 task1, task2 = key
-                res_arr = self.biases[(task1,task2)]+self.biases[(task2,task1)]
-                dqm.set_quadratic(task1, task2, res_arr)
+                print('='*10)
+                print(task1, task2)
+                print(self.biases[(task1, task2)])
+                dqm.set_quadratic(task1, task2, self.biases[(task1, task2)])
             else:
+                print('='*10)
+                print(key)
+                print(self.biases[key])
                 dqm.set_linear(key, self.biases[key])
-
         return dqm

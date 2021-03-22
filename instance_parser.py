@@ -29,7 +29,7 @@ def transformToMachineDict(jobs: dict, solution: dict) -> dict:
         {"job_1": [start_time_of_operation_1, start_time_of_operation_2],
          "job_2": [start_time_of_operation_1, start_time_of_operation_2]}
 
-    Returns: 
+    Returns:
 
         machineDict(dict):
         {"machine_1": [(job, time_of_operation_start, length), (..., ..., ...), ...],
@@ -48,8 +48,8 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
     operations_indexes = defaultdict(list)
 
     # Those dictionaries indicate since or till when each machine should be unused,
-    # because it is already taken by an operation that is happening during start 
-    # or end of time window. Therefore, you can't find them in jobs: dict 
+    # because it is already taken by an operation that is happening during start
+    # or end of time window. Therefore, you can't find them in jobs: dict
     # (instance dictionary), because they are removed from it.
     disable_till = defaultdict(int)
     disable_since = defaultdict(lambda: inf)
@@ -74,8 +74,9 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
                 # an operation reaches out of the time window from right side
                 if i > 0:
                     for x in range(start_time - jobs[job_name][i - 1][1] + 1, end):
-                        disabled_variables.append(get_label(Task(
-                            job_name, i - 1, jobs[job_name][i - 1][0], jobs[job_name][i - 1][1]), x - start))
+                        disabled_variables.append((get_label(Task(
+                            job_name, i - 1, jobs[job_name][i - 1][0],
+                            jobs[job_name][i - 1][1])), x - start))
                 disable_since[machine] = min(
                     disable_since[machine], start_time - start)
 
@@ -83,8 +84,9 @@ def find_time_window(jobs: dict, solution: dict, start: int, end: int):
                 # an operation reaches out of the time window from the left side
                 if i < len(start_times) - 1:
                     for x in range(end_time - start):
-                        disabled_variables.append(get_label(Task(
-                            job_name, 0, jobs[job_name][i + 1][0], jobs[job_name][i + 1][1]), x))
+                        disabled_variables.append((get_label(Task(
+                            job_name, 0, jobs[job_name][i + 1][0],
+                            jobs[job_name][i + 1][1])), x))
                 disable_till[machine] = max(
                     disable_till[machine], end_time - start)
 
@@ -190,7 +192,7 @@ def checkValidity(jobs: dict, solution: dict) -> bool:
         jobs (dict): description of an instance
         {"job_1": [ (m1, l1), (m2, l2), (m3, l3), (m3, l3), ... ],
          "job_2": [ (m1, l1), (m2, l2), (m3, l3), (m3, l3), ... ],
-         ...}         
+         ...}
          where:
          - mx == machine of task x
          - lx == length of task x
