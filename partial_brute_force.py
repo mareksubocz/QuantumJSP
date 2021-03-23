@@ -36,6 +36,7 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
             from random import sample
             for i in sample(range(max_time - window_size), len(range(max_time -
                                                                      window_size))):
+                print('frame: ', i)
 
                 # cutting out the sub-instance
                 info = find_time_window(jobs, solution, i, i + window_size)
@@ -45,6 +46,8 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
                 # disable_till, disable_since and disabled_variables are all
                 # explained in instance_parser.py
                 new_jobs, indexes, disable_till, disable_since, disabled_variables = info
+                # FIXME: tak chyba nie może być
+                disabled_variables = []
 
                 if not bool(new_jobs):  # if sub-instance is empty
                     continue
@@ -65,13 +68,14 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
 
                 # using the best (lowest energy) sample
                 solution1 = sampleset.first.sample
-                print(solution1)
+                print('solution: ', solution1)
                 # FIXME: dokończ tutaj
 
                 # variables that were selected by the sampler
                 # (apart from the auxiliary variables)
-                selected_nodes = [k for k, v in solution1.items() if v ==
-                                  1 and not k.startswith('aux')]
+                # selected_nodes = [k for k, v in solution1.items() if v ==
+                #                   1 and not k.startswith('aux')]
+                selected_nodes = [','.join((k, str(v))) for k, v in solution1.items()]
 
                 # parsing aquired information
                 task_times = {k: [-1] * len(v) for k, v in new_jobs.items()}
@@ -97,6 +101,6 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
             # uncomment this if you want to apply some behaviuor
             # in demo.py when exception occurs:
             # yield 'ex', 'ex'
-            print(e)
+            print('error: ', e)
             import traceback; print(traceback.print_exc())
             continue

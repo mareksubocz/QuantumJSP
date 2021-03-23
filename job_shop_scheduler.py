@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+
 from bisect import bisect_right
 import numpy as np
 import dimod
@@ -188,7 +189,7 @@ class JobShopScheduler:
 
 
     def _remove_absurd_times(self, disable_till: dict, disable_since,
-                             disabled_variables, lagrange_absurd=10):
+                             disabled_variables, lagrange_absurd=2):
         """Sets impossible task times in self.csp to 0.
 
         Args:
@@ -247,6 +248,9 @@ class JobShopScheduler:
 
         # Times that are manually disabled
         for label, t in disabled_variables:
+            print('disabled: ', disabled_variables)
+            print('tasks: ', self.tasks)
+            print('biases: ', list(self.biases.keys()))
             self.biases[label][int(t)] += lagrange_absurd
 
     def get_dqm(self, disable_till, disable_since, disabled_variables,
@@ -254,9 +258,9 @@ class JobShopScheduler:
         """Returns a BQM to the Job Shop Scheduling problem.  """
 
         # Apply constraints to self.csp
-        self._remove_absurd_times(disable_till, disable_since, disabled_variables)
         self._add_precedence_constraint(lagrange_precedence)
         self._add_share_machine_constraint(lagrange_share)
+        self._remove_absurd_times(disable_till, disable_since, disabled_variables)
         # Get BQM
         #bqm = dwavebinarycsp.stitch(self.csp, **stitch_kwargs)
 
@@ -321,13 +325,7 @@ class JobShopScheduler:
         for key, value in self.biases.items():
             if type(key) is tuple:
                 task1, task2 = key
-                print('='*10)
-                print(task1, task2)
-                print(self.biases[(task1, task2)])
                 dqm.set_quadratic(task1, task2, self.biases[(task1, task2)])
             else:
-                print('='*10)
-                print(key)
-                print(self.biases[key])
                 dqm.set_linear(key, self.biases[key])
         return dqm

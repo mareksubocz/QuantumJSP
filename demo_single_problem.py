@@ -23,9 +23,9 @@ import tabu
 
 # Construct a BQM for the jobs
 jobs = {"cupcakes": [("mixer", 2), ("oven", 1)],
-        "smoothie": [("mixer", 1)],
-        "lasagna": [("oven", 2)]}
-max_time = 4	  # Upperbound on how long the schedule can be; 4 is arbitrary
+        "smoothie": [("mixer", 1), ("oven", 1)],
+        "lasagna": [("oven", 2), ("mixer", 1)]}
+max_time = 6	  # Upperbound on how long the schedule can be; 4 is arbitrary
 dqm = get_jss_dqm(jobs, max_time)
 print(dqm)
 

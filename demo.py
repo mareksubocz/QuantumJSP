@@ -37,13 +37,12 @@ last_result = initial_result
 current_solution = {}
 for current_solution, _ in solve_with_pbruteforce(squashed_jobs,
                                                   initial_solution,
-                                                  window_size=5,
+                                                  window_size=initial_result,
                                                   qpu=True,
                                                   lagrange_one_hot=1,
                                                   lagrange_precedence=2,
                                                   lagrange_share=2,
                                                   num_of_iterations=1):
-    print('elo')
     current_result = get_result(squashed_jobs, current_solution)
 
     if current_result < last_result:
