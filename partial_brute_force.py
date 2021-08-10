@@ -12,9 +12,9 @@ from pprint import pprint
 
 from copy import deepcopy
 
-def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
-                           max_time=None, window_size=5, chain_strength=2,
-                           num_of_iterations=10, min_classical_gap=2,
+def solve_with_pbruteforce(jobs, solution, qpu=True,
+                           max_time=None, window_size=5, time_limit=10,
+                           num_of_iterations=10,
                            lagrange_one_hot=1, lagrange_precedence=1,
                            lagrange_share=1):
 
@@ -29,7 +29,8 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
             if qpu:
                 sampler = LeapHybridDQMSampler()
             else:
-                sampler = tabu.TabuSampler()
+                assert False, "can't do without the qpu"
+                # sampler = tabu.TabuSampler()
 
             # looping over parts of the instance, solving small sub-instances
             # of size window_size
@@ -64,11 +65,11 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
                 # reding num_reads responses from the sampler
                 # sampleset = sampler.sample_dqm(dqm, chain_strength=chain_strength,
                 #                            num_reads=num_reads)
-                sampleset = sampler.sample_dqm(dqm)
+                sampleset = sampler.sample_dqm(dqm, time_limit=time_limit)
 
                 # using the best (lowest energy) sample
                 solution1 = sampleset.first.sample
-                print('solution: ', solution1)
+                # print('solution: ', solution1)
                 # FIXME: dokończ tutaj
 
                 # variables that were selected by the sampler
@@ -93,9 +94,13 @@ def solve_with_pbruteforce(jobs, solution, qpu=False, num_reads=2000,
 
                 # checking if the new, improved solution is valid
                 if checkValidity(jobs, sol_found):
+                    print('git')
+                   # get_result(jobs, sol_found) <= max_time-3:
                     solution = deepcopy(sol_found)
                     # solution = sol_found
                     yield solution, i  # solution and current position of window
+                else:
+                    print('zepsute')
 
         except Exception as e:
             # uncomment this if you want to apply some behaviuor

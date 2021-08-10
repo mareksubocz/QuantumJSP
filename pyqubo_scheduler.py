@@ -1,13 +1,10 @@
 from __future__ import print_function
 
-
 from bisect import bisect_right
-import numpy as np
-import dimod
-import itertools
+from pyqubo import Binary
 
 
-def get_jss_dqm(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, lagrange_one_hot=1, lagrange_precedence=1, lagrange_share=1):
+def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, lagrange_one_hot=1, lagrange_precedence=1, lagrange_share=1):
     """Returns a BQM to the Job Shop Scheduling problem.
     Args:
         job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
@@ -53,18 +50,18 @@ def get_jss_dqm(job_dict, max_time, disable_till=None, disable_since=None, disab
     if disabled_variables is None:
         disabled_variables = []
 
-    scheduler = JobShopScheduler(job_dict)
-    return scheduler.get_dqm(disable_till, disable_since, disabled_variables,
+    scheduler = JobShopScheduler(job_dict, max_time)
+    return scheduler.get_bqm(disable_till, disable_since, disabled_variables,
                              lagrange_one_hot,
                              lagrange_precedence,
                              lagrange_share)
 
 
-def get_label(task):
+def get_label(task, time):
     """Creates a standardized name for variables in the constraint satisfaction problem,
     JobShopScheduler.csp.
     """
-    return f"{task.job}_{task.position}"
+    return f"{task.job}_{task.position},{time}"
 
 
 class Task:
@@ -120,9 +117,14 @@ class JobShopScheduler:
         self.last_task_indices = []
         self.max_time = max_time
         # Initialize Hamiltonian
-        self.biases = {}
+        self.H = 0
+        self.H_vars = {}
+        # Variables that we know cannot be true beforehand and we don't want
+        # them in a Hamiltonian.
+        self.absurd_times = set()
 
         # Populates self.tasks and self.max_time
+
         self._process_data(job_dict)
 
     def _process_data(self, jobs):
@@ -147,15 +149,22 @@ class JobShopScheduler:
         if self.max_time is None:
             self.max_time = total_time
 
-        # prepare tasks names and array of their biases
-        # TODO: we will add biases[i][j] and biases[j][i] at the end
-        for task1, task2 in itertools.product(self.tasks, self.tasks):
-            if task1 == task2:
-                self.biases[get_label(task1)] = np.zeros(self.max_time)
-            else:
-                self.biases[(get_label(task1), get_label(task2))] = \
-                np.zeros((self.max_time, self.max_time))
-
+    def _add_one_start_constraint(self, lagrange_one_hot=1):
+        """self.csp gets the constraint: A task can start once and only once
+        """
+        for task in self.tasks:
+            task_times = {get_label(task, t) for t in range(self.max_time)}
+            H_term = 0
+            for label in task_times:
+                if label in self.absurd_times:
+                   continue
+                if label not in self.H_vars:
+                    var = Binary(label)
+                    self.H_vars[label] = var
+                else:
+                    var = self.H_vars[label]
+                H_term += var
+            self.H += lagrange_one_hot * ((1 - H_term) ** 2)
 
     def _add_precedence_constraint(self, lagrange_precedence=1):
         """self.csp gets the constraint: Task must follow a particular order.
@@ -164,32 +173,83 @@ class JobShopScheduler:
         for current_task, next_task in zip(self.tasks, self.tasks[1:]):
             if current_task.job != next_task.job:
                 continue
-            # label current task, label next task
-            lct = get_label(current_task)
-            lnt = get_label(next_task)
-            for t in range(self.max_time):
-                for tt in range(0, min(t+current_task.duration, self.max_time)):
-                    self.biases[(lct,lnt)][t][tt] += lagrange_precedence
 
+            # Forming constraints with the relevant times of the next task
+            for t in range(self.max_time):
+                current_label = get_label(current_task, t)
+                if current_label in self.absurd_times:
+                    continue
+
+                if current_label not in self.H_vars:
+                    var1 = Binary(current_label)
+                    self.H_vars[current_label] = var1
+                else:
+                    var1 = self.H_vars[current_label]
+
+                for tt in range(min(t + current_task.duration, self.max_time)):
+
+                    next_label = get_label(next_task, tt)
+                    if next_label in self.absurd_times:
+                        continue
+                    if next_label not in self.H_vars:
+                        var2 = Binary(next_label)
+                        self.H_vars[next_label] = var2
+                    else:
+                        var2 = self.H_vars[next_label]
+
+                    self.H += lagrange_precedence * var1 * var2
 
     def _add_share_machine_constraint(self, lagrange_share=1):
         """self.csp gets the constraint: At most one task per machine per time unit
         """
-        for task1, task2 in itertools.combinations(self.tasks, 2):
-            if task1.machine != task2.machine:
+        sorted_tasks = sorted(self.tasks, key=lambda x: x.machine)
+        # Key wrapper for bisect function
+        wrapped_tasks = KeyList(sorted_tasks, lambda x: x.machine)
+
+        head = 0
+        while head < len(sorted_tasks):
+
+            # Find tasks that share a machine
+            tail = bisect_right(wrapped_tasks, sorted_tasks[head].machine)
+            same_machine_tasks = sorted_tasks[head:tail]
+
+            # Update
+            head = tail
+
+            # No need to build coupling for a single task
+            if len(same_machine_tasks) < 2:
                 continue
-            lt1 = get_label(task1)
-            lt2 = get_label(task2)
-            for t in range(self.max_time):
-                for tt in range(t, min(t+task1.duration, self.max_time)):
-                    self.biases[(lt1, lt2)][t][tt] += lagrange_share
-                # don't add to the main diagonal again
-                for tt in range(t+1, min(t+task2.duration, self.max_time)):
-                    self.biases[(lt1, lt2)][tt][t] += lagrange_share
 
+            # Apply constraint between all tasks for each unit of time
+            for task in same_machine_tasks:
+                for other_task in same_machine_tasks:
+                    if task.job == other_task.job and task.position == other_task.position:
+                        continue
 
-    def _remove_absurd_times(self, disable_till: dict, disable_since,
-                             disabled_variables, lagrange_absurd=2):
+                    for t in range(self.max_time):
+                        current_label = get_label(task, t)
+                        if current_label in self.absurd_times:
+                            continue
+
+                        if current_label not in self.H_vars:
+                            var1 = Binary(current_label)
+                            self.H_vars[current_label] = var1
+                        else:
+                            var1 = self.H_vars[current_label]
+
+                        for tt in range(t, min(t + task.duration, self.max_time)):
+                            this_label = get_label(other_task, tt)
+                            if this_label in self.absurd_times:
+                                continue
+                            if this_label not in self.H_vars:
+                                var2 = Binary(this_label)
+                                self.H_vars[this_label] = var2
+                            else:
+                                var2 = self.H_vars[this_label]
+
+                            self.H += lagrange_share * var1 * var2
+
+    def _remove_absurd_times(self, disable_till: dict, disable_since, disabled_variables):
         """Sets impossible task times in self.csp to 0.
 
         Args:
@@ -210,8 +270,8 @@ class JobShopScheduler:
                 current_job = task.job
 
             for t in range(predecessor_time):
-                label = get_label(task)
-                self.biases[label][t] += lagrange_absurd
+                label = get_label(task, t)
+                self.absurd_times.add(label)
 
             predecessor_time += task.duration
 
@@ -230,8 +290,8 @@ class JobShopScheduler:
             successor_time += task.duration
             for t in range(successor_time):
                 # -1 for zero-indexed time
-                label = get_label(task)#, (self.max_time - 1) - t)
-                self.biases[label][self.max_time-1-t] += lagrange_absurd
+                label = get_label(task, (self.max_time - 1) - t)
+                self.absurd_times.add(label)
 
         # Times that are interfering with disabled regions
         # disabled variables, disable_till and disable_since
@@ -239,28 +299,26 @@ class JobShopScheduler:
         for task in self.tasks:
             if task.machine in disable_till.keys():
                 for i in range(disable_till[task.machine]):
-                    label = get_label(task)
-                    self.biases[label][i] += lagrange_absurd
+                    label = get_label(task, i)
+                    self.absurd_times.add(label)
             elif task.machine in disable_since.keys():
                 for i in range(disable_since[task.machine], self.max_time):
-                    label = get_label(task)
-                    self.biases[label][i] += lagrange_absurd
+                    label = get_label(task, i)
+                    self.absurd_times.add(label)
 
         # Times that are manually disabled
-        for label, t in disabled_variables:
-            print('disabled: ', disabled_variables)
-            print('tasks: ', self.tasks)
-            print('biases: ', list(self.biases.keys()))
-            self.biases[label][int(t)] += lagrange_absurd
+        for label in disabled_variables:
+            self.absurd_times.add(label)
 
-    def get_dqm(self, disable_till, disable_since, disabled_variables,
+    def get_bqm(self, disable_till, disable_since, disabled_variables,
                 lagrange_one_hot, lagrange_precedence, lagrange_share):
         """Returns a BQM to the Job Shop Scheduling problem.  """
 
         # Apply constraints to self.csp
+        self._remove_absurd_times(disable_till, disable_since, disabled_variables)
+        self._add_one_start_constraint(lagrange_one_hot)
         self._add_precedence_constraint(lagrange_precedence)
         self._add_share_machine_constraint(lagrange_share)
-        self._remove_absurd_times(disable_till, disable_since, disabled_variables)
         # Get BQM
         #bqm = dwavebinarycsp.stitch(self.csp, **stitch_kwargs)
 
@@ -315,17 +373,17 @@ class JobShopScheduler:
 
                 # Add bias to variable
                 bias = 2 * base**(end_time - self.max_time)
-                label = get_label(task)
-                self.biases[label][t] += bias
+                label = get_label(task, t)
+                if label in self.absurd_times:
+                    continue
+                if label not in self.H_vars:
+                    var = Binary(label)
+                    self.H_vars[label] = var
+                else:
+                    var = self.H_vars[label]
+                self.H += var * bias
 
-        # Get DQM
-        dqm = dimod.DiscreteQuadraticModel()
-        for task in self.tasks:
-            dqm.add_variable(self.max_time, label=get_label(task))
-        for key, value in self.biases.items():
-            if type(key) is tuple:
-                task1, task2 = key
-                dqm.set_quadratic(task1, task2, self.biases[(task1, task2)])
-            else:
-                dqm.set_linear(key, self.biases[key])
-        return dqm
+        # Get BQM
+        self.model = self.H.compile()
+        bqm = self.model.to_bqm()
+        return bqm

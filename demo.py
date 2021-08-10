@@ -1,24 +1,27 @@
+from solution import Instance
 import sys
 from instance_parser import readInstance, squash_lengths, solve_greedily,\
-get_order, get_result, solve_with_order
+get_order, get_result, solve_with_order, solve_worse
 from utilities import draw_solution
 from partial_brute_force import solve_with_pbruteforce
-from warnings import filterwarnings
+# from warnings import filterwarnings
 
 # if you see some excessive warnings from dwave
 # filterwarnings("ignore")
 
-jobs = readInstance(sys.argv[1])
+# jobs = readInstance(sys.argv[1])
+instance = Instance(path=sys.argv[1])
 
 first_solution = solve_greedily(jobs)
+solution_greedy = instance.solve()
 first_result = get_result(jobs, first_solution)
 print(f"Result without squashing: {first_result}")
 
 # job squashing
-squashed_jobs = squash_lengths(jobs)
+# squashed_jobs = squash_lengths(jobs)
 
 # uncomment to skip job squashing
-# squashed_jobs = jobs
+squashed_jobs = jobs
 
 order = get_order(first_solution)
 initial_solution = solve_with_order(squashed_jobs, order)
@@ -37,17 +40,17 @@ last_result = initial_result
 current_solution = {}
 for current_solution, _ in solve_with_pbruteforce(squashed_jobs,
                                                   initial_solution,
-                                                  window_size=initial_result,
-                                                  qpu=True,
+                                                  window_size=600,
+                                                  time_limit=70,
                                                   lagrange_one_hot=1,
                                                   lagrange_precedence=2,
                                                   lagrange_share=2,
-                                                  num_of_iterations=1):
+                                                  num_of_iterations=5):
     current_result = get_result(squashed_jobs, current_solution)
 
-    if current_result < last_result:
-        last_result = current_result
-        draw_solution(squashed_jobs, current_solution, x_max=initial_result)
+    # if current_result < last_result:
+    #     last_result = current_result
+    draw_solution(squashed_jobs, current_solution, x_max=initial_result)
 
     print(f"Current_result: {get_result(squashed_jobs, current_solution)}")
 

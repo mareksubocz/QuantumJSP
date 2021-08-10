@@ -216,7 +216,7 @@ def checkValidity(jobs: dict, solution: dict) -> bool:
     machineDict = transformToMachineDict(jobs, solution)
 
     # checking if no operations using the same machine intersect
-    for machine, operations in machineDict.items():
+    for _, operations in machineDict.items():
         for i, operation1 in enumerate(operations):
             for j, operation2 in enumerate(operations):
                 if i == j:
@@ -247,7 +247,7 @@ def get_order(solution):
 
 def get_order_numbered(solution):
     order = []
-    for i, (key, value) in enumerate(solution.items()):
+    for i, (_, value) in enumerate(solution.items()):
         # returning one number per operation
         order.extend([(value[x], x * len(solution) + i + 1)
                       for x in range(len(value))])

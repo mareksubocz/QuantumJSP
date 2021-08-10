@@ -12,71 +12,90 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
+import sys
+from utilities import draw_solution
+from instance_parser import checkValidity, get_result, readInstance
 
 from dwave.system.composites import EmbeddingComposite
 from dwave.system.samplers import DWaveSampler
 from dwave.system import LeapHybridDQMSampler
+from greedy import SteepestDescentSolver
+from time import time
 
 from job_shop_scheduler import get_jss_dqm
 import tabu
 
+import pandas as pd
+from itertools import product
+
 # Construct a BQM for the jobs
-jobs = {"cupcakes": [("mixer", 2), ("oven", 1)],
-        "smoothie": [("mixer", 1), ("oven", 1)],
-        "lasagna": [("oven", 2), ("mixer", 1)]}
-max_time = 6	  # Upperbound on how long the schedule can be; 4 is arbitrary
-dqm = get_jss_dqm(jobs, max_time)
-print(dqm)
+# jobs = {"cupcakes": [("mixer", 2), ("oven", 1)],
+#         "smoothie": [("mixer", 1), ("oven", 1)],
+#         "lasagna": [("oven", 2), ("mixer", 1)]}
+full = 1
+max_time=680
+time_limit=1
+results = []
+reads = []
+for max_time, time_limit in product([680], [60]):
+    print(f'-------Max time: {max_time}, time limit: {time_limit}-------')
+    for ifull in range(full):
+        start = time()
+        jobs = readInstance(sys.argv[1])
+        dqm = get_jss_dqm(jobs, max_time=max_time)
 
-qpu = True
-# Submit BQM
-# Note: may need to tweak the chain strength and the number of reads
-if not qpu:
-    sampler = tabu.TabuSampler()
-else:
-    sampler = LeapHybridDQMSampler()
-sampleset = sampler.sample_dqm(dqm)
+        qpu = True
+        # if not qpu:
+            # sampler = tabu.TabuSampler()
+        # else:
+        sampler = LeapHybridDQMSampler()
+        sampleset = sampler.sample_dqm(dqm, time_limit=time_limit,
+                                       label=f'JSP tl:{time_limit}, max:{max_time} {ifull}.')
+        # post processing
+        pp_solver = SteepestDescentSolver()
+        sampleset = pp_solver.sample(dqm, initial_states=sampleset)
 
-# Grab solution
-solution = sampleset.first.sample
-print(solution)
+        # Grab solution
+        solution = sampleset.first.sample
 
-# Visualize solution
-# Note0: we are making the solution simpler to interpret by restructuring it
-#  into the following format:
-#   task_times = {"job": [start_time_for_task0, start_time_for_task1, ..],
-#                 "other_job": [start_time_for_task0, ..]
-#                 ..}
-#
-# Note1: each node in our BQM is labelled as "<job>_<task_index>,<time>".
-#  For example, the node "cupcakes_1,2" refers to job 'cupcakes', its 1st task
-#  (where we are using zero-indexing, so task '("oven", 1)'), starting at time
-#  2.
-#
-#  Hence, we are grabbing the nodes selected by our solver (i.e. nodes flagged
-#  with 1s) that will make a good schedule.
-#  (see next line of code, 'selected_nodes')
-#
-# Note2: if a start_time_for_task == -1, it means that the solution is invalid
+        # # Parse node information
+        result = {i: [-1]*len(jobs[i]) for i in jobs.keys()}
 
-# Grab selected nodes
-selected_nodes = [k for k, v in solution.items() if v == 1]
+        for name, value in solution.items():
+            job_name, task_index = name.rsplit("_", 1)
+            result[int(job_name)][int(task_index)] = value
+        if get_result(jobs, result) == 55 and checkValidity(jobs, result):
+            if result not in results:
+                results.append(result.items())
+                draw_solution(jobs, result)
+                print(f'!{len(results)}!', end='')
 
-# Parse node information
-task_times = {k: [-1]*len(v) for k, v in jobs.items()}
-for node in selected_nodes:
-    job_name, task_time = node.rsplit("_", 1)
-    task_index, start_time = map(int, task_time.split(","))
+        end = time()
+        reads.append([
+            'Advantage',
+            max_time,
+            time_limit,
+            get_result(jobs, result),
+            checkValidity(jobs, result)
+        ])
+        reads_df = pd.DataFrame(reads, columns=['machine', 'max_time', 'time_limit',
+                                                'result', 'valid'])
+        reads_df.to_csv('reads_long2.csv', index=False)
+        # print('max_time:', min_time)
+        # print('time:', end-start)
+        print(f'{ifull}/{full}:', get_result(jobs, result), end=', ')
+        # draw_solution(jobs, result)
+        print('valid:', checkValidity(jobs, result))
 
-    task_times[job_name][task_index] = start_time
+print('number of results:', len(results))
+print(results)
 
-# Print problem and restructured solution
-print("Jobs and their machine-specific tasks:")
-for job, task_list in jobs.items():
-    print("{0:9}: {1}".format(job, task_list))
+# # Print problem and restructured solution
+# print("Jobs and their machine-specific tasks:")
+# for job, task_list in jobs.items():
+#     print("{0:9}: {1}".format(job, task_list))
 
-print("\nJobs and the start times of each task:")
-for job, times in task_times.items():
-    print("{0:9}: {1}".format(job, times))
-print("Solution's energy:", sampleset.first.energy)
+# print("\nJobs and the start times of each task:")
+# for job, times in task_times.items():
+#     print("{0:9}: {1}".format(job, times))
+# print("Solution's energy:", sampleset.first.energy)
