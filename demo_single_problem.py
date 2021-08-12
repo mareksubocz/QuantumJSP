@@ -1,33 +1,24 @@
-# Copyright 2019 D-Wave Systems Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from __future__ import print_function
-
 from dwave.system.composites import EmbeddingComposite
 from dwave.system.samplers import DWaveSampler
 from dwave.system import LeapHybridDQMSampler
+from greedy import SteepestDescentSolver
+from instance_parser import readInstance
+import pandas as pd
+import matplotlib.pyplot as plt
+import sys
+from utilities import draw_solution
 
-from job_shop_scheduler import get_jss_dqm
+from job_shop_scheduler import get_jss_bqm
 import tabu
 
 # Construct a BQM for the jobs
-jobs = {"cupcakes": [("mixer", 2), ("oven", 1)],
-        "smoothie": [("mixer", 1), ("oven", 1)],
-        "lasagna": [("oven", 2), ("mixer", 1)]}
-max_time = 6	  # Upperbound on how long the schedule can be; 4 is arbitrary
-dqm = get_jss_dqm(jobs, max_time)
-print(dqm)
+# jobs = {"cupcakes": [("mixer", 2), ("oven", 1)],
+#         "smoothie": [("mixer", 1), ("oven", 1)],
+#         "lasagna": [("oven", 2), ("mixer", 1)]
+jobs = readInstance(sys.argv[1])
+max_time = 12	  # Upperbound on how long the schedule can be; 4 is arbitrary
+bqm = get_jss_bqm(jobs, max_time)
+# print(bqm)
 
 qpu = True
 # Submit BQM
@@ -35,12 +26,24 @@ qpu = True
 if not qpu:
     sampler = tabu.TabuSampler()
 else:
-    sampler = LeapHybridDQMSampler()
-sampleset = sampler.sample_dqm(dqm)
+    sampler = EmbeddingComposite(DWaveSampler())
+sampleset = sampler.sample(bqm, num_reads=1000)
+print(sampleset)
+# post processing
+solver_greedy = SteepestDescentSolver()
+sampleset_pp = solver_greedy.sample_qubo(bqm.to_qubo()[0], initial_states=sampleset)
 
+plt.plot(list(range(len(sampleset))), sampleset.record.energy, 'b.-',
+                           sampleset_pp.record.energy, 'r^-')
+plt.legend(['QPU samples', 'Postprocessed Samples'])
+plt.xlabel("Sample")
+plt.ylabel("Energy")
+plt.show()
 # Grab solution
-solution = sampleset.first.sample
-print(solution)
+# solution = sampleset_pp.first.sample
+# print(solution)
+# for sol in sampleset.samples():
+#     print(sol.num_occurences)
 
 # Visualize solution
 # Note0: we are making the solution simpler to interpret by restructuring it
@@ -61,6 +64,7 @@ print(solution)
 # Note2: if a start_time_for_task == -1, it means that the solution is invalid
 
 # Grab selected nodes
+solution = sampleset.first.sample
 selected_nodes = [k for k, v in solution.items() if v == 1]
 
 # Parse node information
@@ -69,7 +73,7 @@ for node in selected_nodes:
     job_name, task_time = node.rsplit("_", 1)
     task_index, start_time = map(int, task_time.split(","))
 
-    task_times[job_name][task_index] = start_time
+    task_times[int(job_name)][task_index] = start_time
 
 # Print problem and restructured solution
 print("Jobs and their machine-specific tasks:")
@@ -80,3 +84,30 @@ print("\nJobs and the start times of each task:")
 for job, times in task_times.items():
     print("{0:9}: {1}".format(job, times))
 print("Solution's energy:", sampleset.first.energy)
+
+
+draw_solution(jobs, task_times)
+
+solution = sampleset_pp.first.sample
+selected_nodes = [k for k, v in solution.items() if v == 1]
+
+# Parse node information
+task_times = {k: [-1]*len(v) for k, v in jobs.items()}
+for node in selected_nodes:
+    job_name, task_time = node.rsplit("_", 1)
+    task_index, start_time = map(int, task_time.split(","))
+
+    task_times[int(job_name)][task_index] = start_time
+
+# Print problem and restructured solution
+print("Jobs and their machine-specific tasks:")
+for job, task_list in jobs.items():
+    print("{0:9}: {1}".format(job, task_list))
+
+print("\nJobs and the start times of each task:")
+for job, times in task_times.items():
+    print("{0:9}: {1}".format(job, times))
+print("Solution's energy:", sampleset_pp.first.energy)
+
+
+draw_solution(jobs, task_times)

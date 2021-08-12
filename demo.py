@@ -1,9 +1,15 @@
 import sys
-from instance_parser import readInstance, squash_lengths, solve_greedily,\
-get_order, get_result, solve_with_order
-from utilities import draw_solution
-from partial_brute_force import solve_with_pbruteforce
 from warnings import filterwarnings
+from instance_parser import (
+    get_order,
+    get_result,
+    readInstance,
+    solve_greedily,
+    solve_with_order,
+    squash_lengths,
+)
+from partial_brute_force import solve_with_pbruteforce
+from utilities import draw_solution
 
 # if you see some excessive warnings from dwave
 # filterwarnings("ignore")
