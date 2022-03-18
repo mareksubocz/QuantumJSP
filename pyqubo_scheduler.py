@@ -21,8 +21,8 @@ def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disab
            "another_job_name": [(some_machine, time_duration_on_machine), ..]}
         >>> # Create BQM
         >>> jobs = {"a": [("mixer", 2), ("oven", 1)],
-                   "b": [("mixer", 1)],
-                   "c": [("oven", 2)]}
+                    "b": [("mixer", 1)],
+                    "c": [("oven", 2)]}
         >>> max_time = 4	  # Put an upperbound on how long the schedule can be
         >>> bqm = get_jss_bqm(jobs, max_time, stitch_kwargs)
         >>> # May need to tweak the chain strength and the number of reads

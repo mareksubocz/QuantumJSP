@@ -6,8 +6,10 @@ from datetime import datetime
 def convert_to_datetime(x):
   return datetime.fromtimestamp(31536000+x*24*3600).strftime("%Y-%m-%d")
 
-def draw_solution(jobs: dict, solution: dict, x_max=None, lines=[]):
+def draw_solution(jobs: dict, solution: dict, x_max=None, lines=None):
     df = []
+    if lines is None:
+      lines = []
     if x_max is None:
         x_max = get_result(jobs, solution)
     for job, tasks in solution.items():

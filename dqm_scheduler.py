@@ -1,6 +1,3 @@
-from __future__ import print_function
-
-
 import numpy as np
 import dimod
 import itertools
@@ -130,25 +127,18 @@ class JobShopScheduler:
         # Create and concatenate Task objects
         tasks = []
         last_task_indices = [-1]    # -1 for zero-indexing
-        total_time = 0  # total time of all jobs
 
         for job_name, job_tasks in jobs.items():
             last_task_indices.append(last_task_indices[-1] + len(job_tasks))
 
             for i, (machine, time_span) in enumerate(job_tasks):
                 tasks.append(Task(job_name, i, machine, time_span))
-                total_time += time_span
 
         # Update values
         self.tasks = tasks
         self.last_task_indices = last_task_indices[1:]
 
-        if self.max_time == 0:
-            self.max_time = total_time
-            print(self.max_time)
-
         # prepare tasks names and array of their biases
-        # TODO: we will add biases[i][j] and biases[j][i] at the end
         for task1, task2 in itertools.product(self.tasks, self.tasks):
             if task1 == task2:
                 self.biases[get_label(task1)] = np.zeros(self.max_time)
@@ -248,9 +238,9 @@ class JobShopScheduler:
 
         # Times that are manually disabled
         for label, t in disabled_variables:
-            print('disabled: ', disabled_variables)
-            print('tasks: ', self.tasks)
-            print('biases: ', list(self.biases.keys()))
+            # print('disabled: ', disabled_variables)
+            # print('tasks: ', self.tasks)
+            # print('biases: ', list(self.biases.keys()))
             self.biases[label][int(t)] += lagrange_absurd
 
     def get_dqm(self, disable_till, disable_since, disabled_variables,

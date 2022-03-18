@@ -1,60 +1,38 @@
-from solution import Instance
+# from solution import Solution
+from partial_brute_force import solve_with_pbruteforce_new
 import sys
-from instance_parser import readInstance, squash_lengths, solve_greedily,\
-get_order, get_result, solve_with_order, solve_worse
-from utilities import draw_solution
-from partial_brute_force import solve_with_pbruteforce
-# from warnings import filterwarnings
+from instance import Instance
 
-# if you see some excessive warnings from dwave
-# filterwarnings("ignore")
 
-# jobs = readInstance(sys.argv[1])
+squashing = False
 instance = Instance(path=sys.argv[1])
+squashed_instance = instance.squash()
+print("number of jobs:", instance.n_jobs)
+print("number of machines:", instance.n_machines)
+print("max time value:", instance.max_time)
+if squashing:
+    initial_solution = squashed_instance.solve("greedy")
+else:
+    initial_solution = instance.solve("greedy")
+# initial_solution.visualize()
+best_solution = initial_solution.copy()
+record = initial_solution.get_result()
 
-first_solution = solve_greedily(jobs)
-solution_greedy = instance.solve()
-first_result = get_result(jobs, first_solution)
-print(f"Result without squashing: {first_result}")
+print('Initial result:', record)
 
-# job squashing
-# squashed_jobs = squash_lengths(jobs)
+for solution in solve_with_pbruteforce_new(instance,
+                                           initial_solution,
+                                           window_size=20,
+                                           is_squashed=squashing,
+                                           random=True):
+    print('Current result:',solution.get_result())
+    if solution.get_result() < record:
+        # solution.visualize()
+        best_solution = solution.copy()
+        record = solution.get_result()
 
-# uncomment to skip job squashing
-squashed_jobs = jobs
-
-order = get_order(first_solution)
-initial_solution = solve_with_order(squashed_jobs, order)
-
-# uncomment if you want to leave space between operations at the start
-initial_solution = first_solution
-
-initial_result = get_result(squashed_jobs, initial_solution)
-print(f"Initial (greedy) solution result: {initial_result}")
-draw_solution(squashed_jobs, initial_solution, x_max=initial_result)
-
-print("Performing the algorithm...")
-
-# main loop
-last_result = initial_result
-current_solution = {}
-for current_solution, _ in solve_with_pbruteforce(squashed_jobs,
-                                                  initial_solution,
-                                                  window_size=600,
-                                                  time_limit=70,
-                                                  lagrange_one_hot=1,
-                                                  lagrange_precedence=2,
-                                                  lagrange_share=2,
-                                                  num_of_iterations=5):
-    current_result = get_result(squashed_jobs, current_solution)
-
-    # if current_result < last_result:
-    #     last_result = current_result
-    draw_solution(squashed_jobs, current_solution, x_max=initial_result)
-
-    print(f"Current_result: {get_result(squashed_jobs, current_solution)}")
-
-# Using the order of new solution to solve the problem with full-time jobs
-order = get_order(current_solution)
-print("Streching jobs to full length...")
-print("final result: ", get_result(jobs, solve_with_order(jobs, order)))
+# Solution(squashed_instance, solution=best_solution).visualize()
+proper_solution = instance.solve_with_order(best_solution)
+print('proper result:', proper_solution.get_result())
+print('proper valid:', proper_solution.is_valid())
+# proper_solution.visualize()

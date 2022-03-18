@@ -1,6 +1,5 @@
 from collections import defaultdict
 from copy import deepcopy
-from job_shop_scheduler import get_label, Task
 from math import inf
 from random import shuffle
 
@@ -257,7 +256,7 @@ def get_order_numbered(solution):
     return order
 
 
-def squash_lengths(instance, steps=[4, 7]):
+def squash_lengths(instance, steps=None):
     """Returns an instance with the same operations, but with
     squashed lengths to [1,2,3,..., len(steps)+1]
 
@@ -266,6 +265,8 @@ def squash_lengths(instance, steps=[4, 7]):
         steps (list, optional): lengths at which operations
         are qualified to a longer length. Defaults to [4, 7].
     """
+    if steps is None:
+        steps = [4,7]
 
     steps.sort()
     steps.append(float('inf'))

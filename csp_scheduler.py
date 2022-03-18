@@ -5,7 +5,7 @@ from os import PathLike
 import dwavebinarycsp
 
 
-def get_jss_bqm(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, stitch_kwargs=None):
+def get_jss_csp(job_dict, max_time, disable_till=None, disable_since=None, disabled_variables=None, stitch_kwargs=None):
     """Returns a BQM to the Job Shop Scheduling problem.
     Args:
         job_dict: A dict. Contains the jobs we're interested in scheduling. (See Example below.)
