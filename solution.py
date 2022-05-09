@@ -188,7 +188,8 @@ class Solution(dict):
             def convert_to_datetime(x):
                 return datetime.fromtimestamp(31536000+x*24*3600).strftime("%Y-%m-%d")
 
-            df = [dict(Job=str(i)) for i in range(1, len(self.keys())+1)]
+            # df = [dict(Job=str(i)) for i in range(1, len(self.keys())+1)]
+            df = [dict(Job=str(k)) for k in self.keys()]
             if x_max is None:
                 x_max = self.get_result()
             for job, tasks in self.items():
@@ -210,10 +211,10 @@ class Solution(dict):
                 'range' : [convert_to_datetime(0),
                            convert_to_datetime(self.instance.max_time)]
             })
-            fig.layout.yaxis.update({
-                'tickvals' : list(range(len(self.keys()))),
-                'ticktext' : list(range(1, len(self.keys())+1))
-            })
+            # fig.layout.yaxis.update({
+            #     'tickvals' : list(range(len(self.keys()))),
+            #     'ticktext' : list(range(1, len(self.keys())+1))
+            # })
             fig.layout.legend.update({
                 'traceorder': 'normal'
             })

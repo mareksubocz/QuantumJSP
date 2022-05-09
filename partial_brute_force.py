@@ -1,17 +1,8 @@
 from solution import Solution
 from instance import Instance
-import tabu
-
-from dwave.system.composites import EmbeddingComposite
-from dwave.system import LeapHybridDQMSampler
-from dwavebinarycsp.exceptions import ImpossibleBQM
-
 from instance_parser import *
 
-from pprint import pprint
 from random import sample
-
-from copy import deepcopy
 
 def solve_with_pbruteforce_new(instance: Instance, solution: Solution,
                                num_of_iterations: int=2, window_size: int=5,
@@ -28,7 +19,7 @@ def solve_with_pbruteforce_new(instance: Instance, solution: Solution,
                                 disable_till=disable_till,
                                 disable_since=disable_since,
                                 disabled_variables=disabled_variables)
-            sub_solution = new_jobs.solve("discrete",
+            sub_solution = new_jobs.solve("sim_pyqubo",
                                           statistics=True,
                                           heuristic=True,
                                           is_cut_out=True,

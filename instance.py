@@ -119,11 +119,11 @@ class Instance(dict):
         with open(path) as f:
             self.n_jobs, self.n_machines = list(map(int, f.readline().split()))
             for i, line in enumerate(f):
-                lint = list(map(int, line.split()))
-                job_dict[i + 1] = [
+                lint = list(line.split())
+                job_dict[str(i + 1)] = [
                     x for x in zip(
                         lint[::2],   # machines
-                        lint[1::2])  # operation lengths
+                        map(int, lint[1::2]))  # operation lengths
                 ]
             return job_dict
 
@@ -139,7 +139,7 @@ class Instance(dict):
                 job_name, task_time = node.rsplit("_", 1)
                 task_index, start_time = map(int, task_time.split(","))
 
-                task_times[int(job_name)][task_index] = start_time
+                task_times[job_name][task_index] = start_time
             return Solution(self, solution=task_times)
         elif type == ExtendedVartype.DISCRETE:
             selected_nodes = [','.join((k, str(v))) for k, v in sample.items()]
@@ -150,7 +150,7 @@ class Instance(dict):
                     continue
                 job_name, task_time = node.rsplit("_", 1)
                 task_index, start_time = map(int, task_time.split(","))
-                task_times[int(job_name)][task_index] = start_time
+                task_times[job_name][task_index] = start_time
             return Solution(self, solution=task_times)
         else:
             raise NotImplementedError('This vartype is not supported.')
@@ -295,6 +295,7 @@ class Instance(dict):
                               disable_since=self.disable_since,
                               disable_till=self.disable_till,
                               disabled_variables=self.disabled_variables)
+            # pegasus - Advantage, chimera - 2000Q
             sampler = LeapHybridDQMSampler()
             sampleset = sampler.sample_dqm(bqm)
 

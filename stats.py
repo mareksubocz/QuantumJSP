@@ -157,13 +157,14 @@ class Statistics:
             info['window_start'] = self.window_start
 
         file = Path(filename)
-        new_file = not file.exists()
-        if new_file:
-            df = pd.DataFrame(info, index=[0])
+        info = pd.DataFrame(info, index=[0])
+        if not file.exists():
+            df = info
         else:
             # dataframe anly needed for linter
             df = pd.DataFrame(pd.read_csv(filename, index_col=0))
-            df = df.append(info, ignore_index=True)
+            # df = df.append(info, ignore_index=True)
+            pd.concat([df, info])
         df.to_csv(filename)
 
     # --------------------- TODO list ---------------------

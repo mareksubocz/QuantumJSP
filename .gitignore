@@ -22,3 +22,5 @@ test*.py
 ocean/
 
 .history/
+
+pyrightconfig.json
