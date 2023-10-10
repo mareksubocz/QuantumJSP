@@ -13,6 +13,7 @@ from csp_scheduler import get_jss_csp
 from tabu import TabuSampler
 from collections import defaultdict
 from pathlib import Path
+from instance_best import RECORDS
 from instance_parser import (
     solve_worse,
     solve_greedily,
@@ -114,6 +115,12 @@ class Instance(dict):
         self.disable_since = disable_since
         self.disable_till = disable_till
         self.disabled_variables = disabled_variables
+        instance_name = Path(self.path).stem
+        if instance_name in RECORDS:
+            self.optimal = RECORDS[instance_name]
+        else:
+            print('instance name not in records')
+            self.optimal = max_time
 
     def read_file(self, path: str) -> dict:
         job_dict = defaultdict(list)
