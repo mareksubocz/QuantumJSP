@@ -3,7 +3,7 @@ import dimod
 from stats import Statistics
 from dimod.vartypes import ExtendedVartype, Vartype
 from dwave.system.composites.embedding import EmbeddingComposite
-from dwave.system.samplers.dwave_sampler import DWaveSampler
+from dwave.system.samplers import DWaveSampler
 from dwave.system.samplers.leap_hybrid_sampler import LeapHybridDQMSampler
 from greedy.composite import SteepestDescentComposite
 from solution import Solution
@@ -12,6 +12,7 @@ from pyqubo_scheduler import get_jss_bqm
 from csp_scheduler import get_jss_csp
 from tabu import TabuSampler
 from collections import defaultdict
+from pathlib import Path
 from instance_parser import (
     solve_worse,
     solve_greedily,
@@ -211,7 +212,7 @@ class Instance(dict):
               num_reads=1000,
               postprocessing=False,
               statistics=False,
-              optimal=0,
+              optimal=None,
               heuristic=False,
               is_squashed=None,
               is_cut_out=None,
@@ -285,6 +286,7 @@ class Instance(dict):
         if postprocessing:
             sampler = SteepestDescentComposite(sampler)
 
+
         # -------- DQM method --------
         if mode == 'discrete':
             if postprocessing:
@@ -297,14 +299,15 @@ class Instance(dict):
                               disabled_variables=self.disabled_variables)
             # pegasus - Advantage, chimera - 2000Q
             sampler = LeapHybridDQMSampler()
-            sampleset = sampler.sample_dqm(bqm)
-
+            sampleset = sampler.sample_dqm(bqm, label=f'{mode} JSSP')
         else:
             sampleset = sampler.sample(bqm, num_reads=num_reads,
-                                       return_embedding=True)
+                                       return_embedding=True, label=f'{mode} JSSP')
+
         solution = self.__extract_solution_from_sample(
             sampleset.first.sample, sampleset.vartype
         )
+
 
         if statistics:
             feasibles = []
@@ -323,7 +326,8 @@ class Instance(dict):
             tasks_times = []
             for tasks in self.values():
                 tasks_times.extend([t for _, t in tasks])
-            self.recent_statistics = Statistics(sampleset, self.path,
+            self.recent_statistics = Statistics(sampleset,
+                                                Path(self.path).stem,
                                                 self.max_time,
                                                 postprocessing,
                                                 mode,

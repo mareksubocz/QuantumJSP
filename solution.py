@@ -200,6 +200,8 @@ class Solution(dict):
                                    Finish=convert_to_datetime(start+length),
                                    Job=str(job)))
 
+            df.sort(key=lambda x: x['Machine'] if 'Machine' in x else '')
+
             num_tick_labels = list(range(x_max+1))
             date_ticks = [convert_to_datetime(x) for x in num_tick_labels]
 
@@ -222,8 +224,8 @@ class Solution(dict):
 
         if mode == 'matplotlib':
             pass
-            colors = ['blue', 'red', 'green', 'violet', 'yellow', 'orange']
-            colorsHEX = ['#80B3FF', '#FF3333', '#79D279', '#C299FF', '#FFFF66', '#FFDAB3']
+            colors = ['blue', 'red', 'green', 'violet', 'orange', 'azure']
+            colorsHEX = ['#80B3FF', '#FF3333', '#79D279', '#C299FF', '#FFDAB3', '#93E0F5']
             import matplotlib.pyplot as plt
             import matplotlib.patches as mpatch
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -236,10 +238,10 @@ class Solution(dict):
                         # (operation[1], machine), operation[2] - 0.1, 0.9, name="cos"))
                     rectangles.append( (str(operation[0]),
                         mpatch.Rectangle(
-                            (operation[1]+0.01, machine + 1.5),
+                            (operation[1]+0.01, float(machine) + 1.5),
                             operation[2] - 0.02,
                             0.9,
-                            facecolor=colorsHEX[operation[0]-1],
+                            facecolor=colorsHEX[int(operation[0])-1],
                             edgecolor='black',
                             linewidth=1
                         ),
@@ -261,8 +263,8 @@ class Solution(dict):
             # ax.set_xlim((0, get_result(jobs, solution) + 1))
             ax.set_xticks(range(0, self.get_result() + 1))
             ax.set_yticks(range(1, len(self.instance) + 2))
-            ax.set_yticklabels(['', *map(str, range(1, len(self.instance) + 1))])
-            ax.tick_params(left=False)
+            ax.set_yticklabels(['', *map(str, range(len(self.instance)))])
+            ax.tick_params(left=False, rotation=270)
             ax.set_ylabel('Machine')
             ax.set_xlabel('Time Units')
             ax.grid(axis='x')

@@ -24,3 +24,9 @@ ocean/
 .history/
 
 pyrightconfig.json
+
+.ipynb_checkpoints/
+
+*.csv
+
+.python-version
